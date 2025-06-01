@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+#[project]
+#name = "pymagic-guyue"
+#version = "0.0.1"
+#description = "A utility library for Python Magic"
+#authors = [
+#    {name = "Guyue", email = "guyuecw@qq.com"}
+#]
+#readme = "README.md"
+#requires-python = ">=3.6"
+#classifiers = [
+#    "Programming Language :: Python :: 3",
+#    "License :: OSI Approved :: MIT License",
+#    "Operating System :: OS Independent",
+#]
+#
+#[project.urls]
+#"Homepage" = "https://github.com/guyue55/pymagic"
+#"Bug Tracker" = "https://github.com/guyue55/pymagic/issues"
+#
+#[tool.pytest.ini_options]
+#testpaths = ["tests"]
+#python_files = "test_*.py"
+#python_classes = "Test*"
+#python_functions = "test_*"
+#
+#[tool.black]
+#line-length = 88
+#target-version = ['py36', 'py37', 'py38', 'py39']
+#include = '\\.pyi?$'
+#
+#[tool.isort]
+#profile = "black"
+#line_length = 88
+#
+#[tool.poetry.dependencies]
+#loguru = "^1.2"

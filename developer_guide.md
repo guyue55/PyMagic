@@ -39,7 +39,7 @@ python -m unittest discover tests
 
 先安装依赖
 ```bash
-python -m pip install --upgrade setuptools wheel twine
+python -m pip install --upgrade setuptools wheel twine -i https://mirrors.aliyun.com/pypi/simple/
 ```
 
 1. 构建分发包：

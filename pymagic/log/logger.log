@@ -1,0 +1,120 @@
+25-06-01 16:07:22 | ERROR    | [MainThread]| [decorator_utils:_wrapper:386]: error, (catch retry_num 1) test_method(): Test exception, 
+	 default return: False
+Traceback (most recent call last):
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 226, in <module>
+    print(TestExceptionClass().test_method())
+          └ <class '__main__.TestExceptionClass'>
+
+  File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <function TestExceptionClass.test_method at 0x000001668AEF6EE0>
+
+> File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestExceptionClass.test_method of <__main__.TestExceptionClass object at 0x000001668AF1D280>>
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 223, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
+25-06-01 16:07:49 | ERROR    | [MainThread]| [decorator_utils:_wrapper:386]: error, (catch retry_num 1) test_method(): Test exception, 
+	 default return: False
+Traceback (most recent call last):
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 226, in <module>
+    print(TestExceptionClass().test_method())
+          └ <class '__main__.TestExceptionClass'>
+
+  File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <function TestExceptionClass.test_method at 0x000001D495135EE0>
+
+> File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestExceptionClass.test_method of <__main__.TestExceptionClass object at 0x000001D495168280>>
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 223, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
+25-06-01 16:08:05 | ERROR    | [MainThread]| [decorator_utils:_wrapper:386]: error, (catch retry_num 1) test_method(): Test exception, 
+	 default return: False
+Traceback (most recent call last):
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 226, in <module>
+    print(TestExceptionClass().test_method())
+          └ <class '__main__.TestExceptionClass'>
+
+  File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <function TestExceptionClass.test_method at 0x00000204D4DFDEE0>
+
+> File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestExceptionClass.test_method of <__main__.TestExceptionClass object at 0x00000204D4DF3280>>
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 223, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
+25-06-01 16:12:13 | ERROR    | [MainThread]| [decorator_utils:_wrapper:386]: error, (catch retry_num 1) test_method(): Test exception, 
+	 default return: False
+Traceback (most recent call last):
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 226, in <module>
+    print(TestExceptionClass().test_method())
+          └ <class '__main__.TestExceptionClass'>
+
+  File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <function TestExceptionClass.test_method at 0x00000182FF8F8A60>
+
+> File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestExceptionClass.test_method of <__main__.TestExceptionClass object at 0x00000182FF6117F0>>
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 223, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
+25-06-01 16:12:23 | ERROR    | [MainThread]| [decorator_utils:_wrapper:386]: error, (catch retry_num 1) test_method(): Test exception, 
+	 default return: False
+Traceback (most recent call last):
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 226, in <module>
+    print(TestExceptionClass().test_method())
+          └ <class '__main__.TestExceptionClass'>
+
+  File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <function TestExceptionClass.test_method at 0x0000029B80614A60>
+
+> File "D:\Project\Github\PyMagic\pymagic\decorator_utils.py", line 386, in _wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestExceptionClass.test_method of <__main__.TestExceptionClass object at 0x0000029B800D17F0>>
+
+  File "D:\Project\Github\PyMagic\pymagic\_base.py", line 223, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
