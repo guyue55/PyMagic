@@ -1,13 +1,12 @@
-# coding:utf-8
+# coding: utf-8
 """
-常用工具函数模块，提供各种实用功能。
+Tools Utilities
 
-本模块封装了各种常用方法，尽量不涉及复杂的逻辑处理，仅提供基础功能支持。
+常用工具函数模块，提供各种实用功能，封装常用方法，尽量不涉及复杂逻辑，仅提供基础功能支持。
 
-Copyright (C) 2012-2023, 古月居。
+Copyright (C) 2024-2025, 古月居。
 """
 
-# Standard library imports
 from typing import List, Any, Union, Tuple, Optional, Dict, Iterator, Iterable
 import os
 import time

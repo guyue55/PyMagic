@@ -1,35 +1,27 @@
-# coding:utf-8
+# coding: utf-8
 """
+Logger Utilities
+
 日志工具模块，封装loguru库，支持生成不同的日志操作实例。
 
-提供了便捷的日志配置和管理功能，支持多种输出格式和目标。
+提供便捷的日志配置和管理功能，支持多种输出格式和目标。
 
-Copyright (C) 2012-2023, 古月居。
+Copyright (C) 2024-2025, 古月居。
 """
 
-# Standard library imports
 from typing import Union
 from copy import deepcopy
 from sys import stderr
-
-# import types
-
-# Third party imports
 from loguru import logger
 from loguru._logger import Logger, Core
 
-
-# Local imports
-
-
-# 原始类名保留为注释，便于理解历史代码
 class LoggerUtils(Logger):
     """
-    封装loguru库，支持生成不同日志操作实例
-    
+    封装loguru库，支持生成不同日志操作实例。
+
     该类继承自loguru的Logger类，提供了更多便捷的日志配置和管理功能。
     支持创建多个日志实例，每个实例可以有不同的配置和输出目标。
-    
+
     Attributes:
         logger (Logger): 全局日志实例
         DEFAULT_SINK (str): 默认日志文件路径
@@ -39,37 +31,18 @@ class LoggerUtils(Logger):
         FORMAT_THREAD (str): 包含线程信息的日志格式
         DEFAULT (dict): 默认日志配置参数
     
-    参考：https://www.imooc.com/article/321589
-    
-    基本参数释义：
-        sink：日志输出目标，可以是以下类型：
-            - file对象，如sys.stderr或open('file.log', 'w')
-            - 字符串或pathlib.Path对象，表示文件路径
-            - 自定义方法，用于自行定义输出实现
-            - logging模块的Handler，如FileHandler、StreamHandler等
-            - coroutine function，即返回协程对象的函数
+    更多：
+        当sink是协程函数时的特殊参数：
+            loop：用于调度和执行异步日志任务的事件循环
             
-        level：日志输出和保存级别
-        format：日志格式模板
-        filter：决定每条记录是否应发送到sink的可选指令
-        colorize：是否将格式化消息中的颜色标记转换为终端着色的ANSI代码
-        serialize：是否在发送到sink前将记录转换为JSON字符串
-        backtrace：异常跟踪是否应向上扩展，显示完整堆栈
-        diagnose：异常跟踪是否显示变量值以简化调试（生产环境建议设为False）
-        enqueue：是否通过多进程安全队列处理日志消息，使日志记录非阻塞
-        catch：是否自动捕获sink处理日志消息时的错误
-        
-    当sink是协程函数时的特殊参数：
-        loop：用于调度和执行异步日志任务的事件循环
-        
-    当sink是文件路径时的特殊参数：
-        rotation：指示何时应关闭当前日志文件并开始新文件的条件
-        retention：过滤旧文件的指令，用于删除旧日志文件
-        compression：日志文件关闭时转换的压缩格式
-        delay：是否延迟创建文件到第一条日志记录时
-        mode：文件打开模式，默认为'a'（追加模式）
-        buffering：文件缓冲策略
-        encoding：文件编码
+        当sink是文件路径时的特殊参数：
+            rotation：指示何时应关闭当前日志文件并开始新文件的条件
+            retention：过滤旧文件的指令，用于删除旧日志文件
+            compression：日志文件关闭时转换的压缩格式
+            delay：是否延迟创建文件到第一条日志记录时
+            mode：文件打开模式，默认为'a'（追加模式）
+            buffering：文件缓冲策略
+            encoding：文件编码
     """
 
     logger: Logger = logger

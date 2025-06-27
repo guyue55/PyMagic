@@ -1,34 +1,28 @@
 # coding: utf-8
 """
-基础父类，用于继承的模板。
+Base Class
 
-提供了异常捕获、日志记录、地址解析等基础功能，可作为其他类的父类使用。
+基础父类，提供异常捕获、日志记录、地址解析等基础功能，推荐作为公共的基类。
 
-Copyright (C) 2012-2023, 古月居。
+Copyright (C) 2024-2025, 古月居。
 """
 
-# Standard library imports
 from typing import Any, Optional
 from threading import RLock
-
-# Third party imports
 from loguru import logger
-
-# Local imports
 from pymagic.tools_utils import Tools
 from pymagic.decorator_utils import Decorate
-
 
 class Base:
     """
     基础父类，提供异常捕获、日志记录和地址解析等功能。
-    
-    可作为其他类的父类使用，自动为子类方法添加异常捕获和日志记录功能。
-    支持解析各种连接地址格式，如Redis、FTP等地址。
-    
+
+    可作为公共的基类，自动为子类方法添加异常捕获和日志记录功能。
+    支持解析各种连接地址格式，如 Redis、FTP 等。
+
     Attributes:
-        logger: 日志实例，用于记录日志
-        LOCK: 线程锁，用于线程安全操作
+        logger (Logger): 日志实例
+        LOCK (RLock): 线程锁
     """
     logger = logger
     LOCK = RLock()
@@ -36,7 +30,7 @@ class Base:
     def __init__(self, **kwargs):
         """
         初始化基础类。
-        
+        注：默认参数以 _ 开头
         Args:
             **kwargs: 关键字参数
                 _parse_addr (bool): 是否自动解析地址，默认为True

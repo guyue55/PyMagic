@@ -1,26 +1,16 @@
-# coding:utf-8
+# coding: utf-8
 """
-常用装饰器封装模块，提供各种实用的装饰器功能。
+Decorator Utilities
 
-包含异常捕获、性能计时、线程安全等装饰器，以及自动为类的方法添加装饰器的功能。
+常用装饰器封装模块，提供异常捕获、性能计时、线程安全等装饰器，以及自动为类的方法添加装饰器的功能。
 
-Copyright (C) 2012-2023, 古月居。
-
-References:
-    Python操作ElasticSearch笔记: https://www.jianshu.com/p/1ca69272564d
+Copyright (C) 2024-2025, 古月居。
 """
 
-# Standard library imports
 from functools import wraps
 import threading
 import time
-
-# Third party imports
 from loguru import logger
-
-
-# Local imports
-
 
 def print_log(log_msg: str, level: str = None, *args, **kwargs):
     """
@@ -56,13 +46,11 @@ def class_func_list(cls: object):
         list: 包含(方法名, 方法对象)元组的列表
     """
     if callable(cls):
-        # print([(name, getattr(cls, name)) for name in dir(cls) if not name.startswith('_')])
         return [(name, getattr(cls, name))
                 for name in dir(cls) if not name.startswith('_')
                 and not isinstance(getattr(cls.__class__, name, None), property)
                 ]
     else:
-        # print(66666)
         return list()
 
 
@@ -218,11 +206,11 @@ class Decorate:
                 with lock方式加锁最为简单，也可用acquire()加锁，release()释放锁。
 
         在Python中一个Lock对象和一个RLock对象有很多区别:
-        lock	                                    rlock
-        lock对象无法再被其他线程获取，除非持有线程释放 	rlock对象可以被其他线程多次获取
-        lock对象可被任何线程释放 	                    rlock对象只能被持有的线程释放
-        lock对象不可以被任何线程拥有 	                rlock对象可以被多个线程拥有
-        对一个对象锁定是很快的 	                    对一个对象加rlock比加lock慢
+        221: lock                                    rlock
+        222: lock对象无法再被其他线程获取，除非持有线程释放     rlock对象可以被其他线程多次获取
+        223: lock对象可被任何线程释放                     rlock对象只能被持有的线程释放
+        224: lock对象不可以被任何线程拥有                 rlock对象可以被多个线程拥有
+        225: 对一个对象锁定是很快的                     对一个对象加rlock比加lock慢
         :param func:
         :return:
         """
