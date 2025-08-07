@@ -1,3 +1,19 @@
+# -*- coding: utf-8 -*-
+"""Tools工具类的单元测试.
+
+此模块包含Tools类功能的全面测试，
+包括字符串处理、系统检测、文件操作和各种实用函数。
+
+测试类:
+    TestTools: Tools类核心功能测试
+    TestStringUtils: 字符串处理工具测试
+    TestSystemUtils: 系统检测工具测试
+    TestFileUtils: 文件操作工具测试
+
+作者: Guyue
+许可证: MIT
+"""
+
 import os
 import time
 import unittest

@@ -1,10 +1,37 @@
-# coding: utf-8
-"""
-Decorator Utilities
+# -*- coding: utf-8 -*-
+"""PyMagic装饰器工具模块.
 
-常用装饰器封装模块，提供异常捕获、性能计时、线程安全等装饰器，以及自动为类的方法添加装饰器的功能。
+本模块提供了一套全面的实用装饰器集合，用于异常处理、性能计时、
+线程安全以及自动为类方法应用装饰器等功能。
 
-Copyright (C) 2024-2025, 古月居。
+类:
+    MyThread: 增强的线程类，支持返回值获取和超时控制
+    Decorate: 主要的装饰器工具类，包含各种装饰器
+
+函数:
+    print_log: 使用loguru的增强日志记录函数
+    class_func_list: 获取类方法列表，排除私有方法
+
+示例:
+    装饰器的基本用法:
+    
+    >>> from pymagic.decorator_utils import Decorate
+    >>> 
+    >>> @Decorate.catch(result=None)
+    >>> def risky_function():
+    ...     raise ValueError("出现错误")
+    ...     return "success"
+    >>> 
+    >>> result = risky_function()  # 返回None而不是抛出异常
+    >>> 
+    >>> @Decorate.time_run
+    >>> def slow_function():
+    ...     time.sleep(1)
+    ...     return "done"
+
+作者: Guyue
+许可证: MIT
+版权所有 (C) 2024-2025, 古月居.
 """
 
 from functools import wraps
@@ -13,14 +40,21 @@ import time
 from loguru import logger
 
 def print_log(log_msg: str, level: str = None, *args, **kwargs):
-    """
-    输出指定等级日志，使用loguru库的日志记录功能。
+    """使用loguru库输出指定级别的日志消息.
     
-    Args:
-        level: 日志等级，如debug/info/warning/error/exception/critical/success
-        log_msg: 日志信息
-        *args: 传递给日志函数的位置参数
-        **kwargs: 传递给日志函数的关键字参数
+    此函数提供了一种便捷的方式，使用loguru日志库记录不同
+    严重级别的日志消息。
+    
+    参数:
+        log_msg: 要记录的日志消息.
+        level: 日志级别，如debug/info/warning/error/exception/critical/success.
+            如果为None或"exception"，默认为"error".
+        *args: 传递给日志函数的位置参数.
+        **kwargs: 传递给日志函数的关键字参数.
+    
+    注意:
+        "exception"级别会映射到"error"级别，因为loguru
+        使用"error"进行异常日志记录.
     """
     # loguru的exception实际为error
     if not level or level.lower() == "exception":
@@ -36,14 +70,26 @@ def print_log(log_msg: str, level: str = None, *args, **kwargs):
 
 
 def class_func_list(cls: object):
-    """
-    获取类的方法列表，不包括以下划线开头的方法和property属性。
+    """获取类方法列表，排除私有方法和属性.
     
-    Args:
-        cls: 要获取方法的类或对象
+    此函数返回类或对象的公共方法列表，过滤掉以下划线开头的方法
+    和属性特性。
+    
+    参数:
+        cls: 要获取方法的类或对象.
         
-    Returns:
-        list: 包含(方法名, 方法对象)元组的列表
+    返回:
+        list: 包含(方法名, 方法对象)元组的列表，
+            包含所有公共可调用方法.
+    
+    示例:
+        >>> class MyClass:
+        ...     def public_method(self):
+        ...         pass
+        ...     def _private_method(self):
+        ...         pass
+        >>> methods = class_func_list(MyClass)
+        >>> print([name for name, _ in methods])  # ['public_method']
     """
     if callable(cls):
         return [(name, getattr(cls, name))
@@ -55,25 +101,44 @@ def class_func_list(cls: object):
 
 
 class MyThread(threading.Thread):
-    """ 
-    重写多线程类，支持获取线程执行结果和超时控制。
+    """增强的线程类，支持返回值获取和超时控制.
     
-    使用此类可以控制函数运行时间，超时则结束函数运行，并可获取函数返回值。
+    此类扩展了标准的threading.Thread，支持从线程执行中获取
+    返回值，并为函数执行提供超时控制功能。
+    
+    属性:
+        func: 在线程中执行的目标函数.
+        args: 传递给目标函数的参数元组.
+        result: 目标函数执行的返回值.
+        err_result: 发生错误时返回的值.
+    
+    示例:
+        >>> def slow_function(x, y):
+        ...     time.sleep(1)
+        ...     return x + y
+        >>> 
+        >>> thread = MyThread(target=slow_function, args=(1, 2), err_result=0)
+        >>> thread.start()
+        >>> thread.join()
+        >>> result = thread.get_result()  # 返回3
+    
+    注意:
+        此实现基于:
+        https://www.cnblogs.com/hujq1029/p/7219163.html
     """
 
     def __init__(self, target, args=(), err_result=None):
-        """
-        初始化线程对象。
+        """初始化增强的线程对象.
         
-        扩展了标准threading.Thread类，添加了返回值支持。
+        通过添加对目标函数结果的捕获和返回支持，
+        扩展了标准的threading.Thread类。
         
-        Args:
-            target: 目标函数
-            args: 传递给目标函数的参数元组
-            err_result: 发生错误时的返回值
-            
-        Note:
-            此实现参考自: https://www.cnblogs.com/hujq1029/p/7219163.html
+        参数:
+            target: 在线程中执行的目标函数.
+            args: 传递给目标函数的参数元组.
+                默认为空元组.
+            err_result: 执行过程中发生错误时返回的值.
+                默认为None.
         """
         super(MyThread, self).__init__()
         self.func = target
@@ -82,22 +147,28 @@ class MyThread(threading.Thread):
         self.err_result = err_result
 
     def run(self):
-        """
-        执行线程的目标函数并保存返回值。
+        """执行目标函数并保存其返回值.
         
-        重写了Thread类的run方法，添加了返回值的保存。
+        重写Thread类的run方法，以捕获并存储
+        目标函数执行的返回值。
         """
         # 接收返回值
         self.result = self.func(*self.args)
 
     def get_result(self):
-        """
-        获取线程执行的结果。
+        """获取线程执行的结果.
         
-        如果线程尚未结束或发生异常，将返回预设的错误返回值。
+        返回目标函数执行的结果。
+        如果线程尚未完成或发生异常，
+        返回预定义的错误结果值。
         
-        Returns:
-            任意类型: 线程函数的返回值或预设的错误返回值
+        返回:
+            Any: 线程函数的返回值或
+                预定义的错误结果值.
+        
+        注意:
+            此方法应在线程完成执行后调用
+            (在join()之后)以获得有意义的结果.
         """
         try:
             return self.result
@@ -107,14 +178,36 @@ class MyThread(threading.Thread):
 
 
 class Decorate:
-    """
-    装饰器工具类，提供各种实用的装饰器和自动装饰功能。
+    """装饰器工具类，提供各种实用的装饰器.
     
-    包含异常捕获、性能计时、线程安全等装饰器，以及自动为类的方法添加装饰器的功能。
+    此类包含了一套全面的装饰器集合，用于异常处理、性能计时、
+    线程安全以及自动为类方法应用装饰器等功能。
     
-    Attributes:
-        LOCK (RLock): 线程锁，用于线程安全操作
-        DEFAULT_VALUE (bool): 默认的错误返回值
+    该类提供静态装饰器方法和实例方法，
+    用于自动为类的所有方法应用装饰器。
+    
+    属性:
+        LOCK (RLock): 用于线程安全操作的线程锁.
+        DEFAULT_VALUE (bool): 默认错误返回值.
+    
+    示例:
+        使用静态装饰器:
+        
+        >>> @Decorate.catch(result="error")
+        >>> def risky_function():
+        ...     raise ValueError("出现错误")
+        >>> 
+        >>> @Decorate.time_run
+        >>> def slow_function():
+        ...     time.sleep(1)
+        
+        自动装饰类:
+        
+        >>> class MyClass:
+        ...     def method1(self):
+        ...         return "result1"
+        >>> 
+        >>> Decorate(MyClass).catch_class_obj()
     """
 
     # 线程锁
@@ -128,24 +221,39 @@ class Decorate:
     def catch(result=False, err_info: str = "",
               err_level: str = "exception", exception: object = Exception,
               **d_kwargs):
-        """
-        捕获异常装饰器，在函数发生异常时返回预设值。
+        """异常捕获装饰器，在异常时返回预设值.
         
-        Args:
-            result: 异常时的返回值
-            err_info: 异常信息前缀
-            err_level: 日志记录的异常级别
-            exception: 要捕获的异常类型
-            **d_kwargs: 其他参数
+        此装饰器包装函数以捕获指定的异常，并返回预定义的值
+        而不是让异常传播。它还使用指定的日志级别记录异常详情。
+        
+        参数:
+            result: 发生异常时返回的值. 默认为False.
+            err_info: 日志中错误消息的前缀字符串. 默认为空字符串.
+            err_level: 异常记录的日志级别 (debug/info/warning/error/exception/critical).
+                默认为"exception".
+            exception: 要捕获的异常类型. 默认为Exception(捕获所有异常).
+            **d_kwargs: 用于未来扩展性的额外关键字参数.
             
-        Returns:
-            callable: 装饰器函数
+        返回:
+            callable: 包装目标函数的装饰器函数.
         
-        Examples:
-            @Decorate.catch(result=None, err_info="处理数据时出错")
-            def process_data(data):
-                # 处理可能抛出异常的代码
-                return processed_data
+        示例:
+            带自定义返回值的基本用法:
+            
+            >>> @Decorate.catch(result=None, err_info="数据处理失败")
+            >>> def process_data(data):
+            ...     # 可能抛出异常的代码
+            ...     return processed_data
+            
+            捕获特定异常类型:
+            
+            >>> @Decorate.catch(result=0, exception=ValueError)
+            >>> def parse_number(text):
+            ...     return int(text)
+        
+        注意:
+            装饰器可以带参数或不带参数使用。不带参数使用时，
+            使用默认值。
         """
 
         def decorator(func):
@@ -169,17 +277,29 @@ class Decorate:
 
     @staticmethod
     def time_run(func):
-        """
-        测量函数运行时间的装饰器。
+        """测量函数执行时间的装饰器.
         
-        Args:
-            func: 要测量运行时间的函数
+        此装饰器包装函数以测量并记录其执行时间。
+        它记录开始和结束时间，计算经过的时间，
+        并以毫秒和分钟为单位记录结果。
+        
+        参数:
+            func: 要测量执行时间的函数.
             
-        Returns:
-            callable: 包装后的函数，执行时会记录并输出运行时间
+        返回:
+            callable: 调用时记录执行时间的包装函数.
             
-        Note:
-            时间以毫秒为单位记录，同时也会转换为分钟显示
+        示例:
+            >>> @Decorate.time_run
+            >>> def slow_operation():
+            ...     time.sleep(2)
+            ...     return "completed"
+            >>> 
+            >>> result = slow_operation()  # 记录执行时间
+        
+        注意:
+            时间以毫秒为单位记录，并转换为分钟以提高可读性。
+            使用time.perf_counter()获得高精度。
         """
 
         @wraps(func)
@@ -200,19 +320,37 @@ class Decorate:
 
     @staticmethod
     def synchronized(func):
-        """
-        线程锁装饰器
-                线程锁，有threading.Lock() 和 threading.RLock()
-                with lock方式加锁最为简单，也可用acquire()加锁，release()释放锁。
-
-        在Python中一个Lock对象和一个RLock对象有很多区别:
-        221: lock                                    rlock
-        222: lock对象无法再被其他线程获取，除非持有线程释放     rlock对象可以被其他线程多次获取
-        223: lock对象可被任何线程释放                     rlock对象只能被持有的线程释放
-        224: lock对象不可以被任何线程拥有                 rlock对象可以被多个线程拥有
-        225: 对一个对象锁定是很快的                     对一个对象加rlock比加lock慢
-        :param func:
-        :return:
+        """使用RLock的线程同步装饰器.
+        
+        此装饰器通过使用可重入锁(RLock)确保被装饰函数的线程安全执行。
+        它防止多个线程同时访问同一函数时出现竞态条件。
+        
+        装饰器使用'with lock'模式进行自动锁获取和释放，
+        这比手动acquire()/release()更安全。
+        
+        参数:
+            func: 要同步的函数.
+            
+        返回:
+            callable: 具有线程同步功能的包装函数.
+            
+        示例:
+            >>> @Decorate.synchronized
+            >>> def critical_section():
+            ...     # 线程安全的代码
+            ...     shared_resource += 1
+            ...     return shared_resource
+        
+        注意:
+            Python中Lock和RLock的区别:
+            - Lock: 释放前不能被其他线程再次获取
+            - RLock: 可以被同一线程多次获取
+            - Lock: 可以被任何线程释放
+            - RLock: 只能被获取它的线程释放
+            - Lock: 不能被任何线程拥有
+            - RLock: 可以被多个线程拥有
+            - Lock: 比RLock快
+            - RLock: 比Lock慢但更灵活
         """
 
         @wraps(func)
@@ -224,10 +362,30 @@ class Decorate:
 
     @staticmethod
     def singleton(cls):
-        """
-        类装饰器，单例模式，线程安全
-        注：放在装饰器类中调用出现问题，所以此处单独写本函数
-        :return:
+        """线程安全的单例模式类装饰器.
+        
+        此装饰器为类实现单例模式，确保被装饰类只能存在一个实例。
+        实现使用RLock保证线程安全。
+        
+        参数:
+            cls: 要转换为单例的类.
+            
+        返回:
+            callable: 返回单例实例的包装函数.
+            
+        示例:
+            >>> @Decorate.singleton
+            >>> class DatabaseConnection:
+            ...     def __init__(self):
+            ...         self.connected = True
+            >>> 
+            >>> db1 = DatabaseConnection()
+            >>> db2 = DatabaseConnection()
+            >>> assert db1 is db2  # 同一个实例
+        
+        注意:
+            此函数实现为独立函数而不是装饰器类中的方法，
+            以避免方法解析和类装饰的潜在问题。
         """
         instances = {}
 
@@ -331,10 +489,13 @@ class Decorate:
             self.flag_retry = True
 
     def catch_class_obj(self):
-        """
-        Add decorator for each method of a class.
-        自动为py类的每个方法添加装饰器
-        :return:
+        """为类的每个方法添加装饰器.
+        
+        自动为Python类的每个公共方法添加异常捕获装饰器，
+        实现统一的异常处理和重试机制。
+        
+        返回:
+            None: 此方法直接修改类对象，无返回值.
         """
         # 获取类的方法列表
         for name, fn in self.iter_func(self.obj):
@@ -353,15 +514,17 @@ class Decorate:
             #     logger.warning("func %s: %s, %s" % (name, fn, type(fn)))
 
     def catch_retry_obj(self, func_name: str, func):
-        """
-        装饰器，捕捉异常，可设置重试次数
+        """对象方法装饰器，捕捉异常并支持重试.
         
-        Args:
-            func_name: 被装饰的函数名
-            func: 被装饰的函数
+        为指定的函数添加异常捕获和重试功能，当函数执行失败时
+        可以按照配置的次数进行重试，或者进行无限重试。
+        
+        参数:
+            func_name: 被装饰的函数名.
+            func: 被装饰的函数对象.
             
-        Returns:
-            object: 返回函数值或设置的异常返回值self.err_return
+        返回:
+            object: 返回函数执行结果或设置的异常返回值self.err_return.
         """
 
         @wraps(func)
@@ -396,18 +559,21 @@ class Decorate:
 
     @staticmethod
     def iter_func(obj, flag_property: bool = False):
-        """
-        遍历对象的方法，获取非_开头的方法（即筛除内置方法和自定义的_、__的私有、不可重写等特殊方法）
+        """遍历对象的方法，获取公共方法列表.
         
-        Args:
-            obj: 待遍历对象/类
-            flag_property: 是否包含@property装饰的函数
+        遍历对象的方法，获取非下划线开头的方法，即筛除内置方法
+        和自定义的私有、不可重写等特殊方法。
+        
+        参数:
+            obj: 待遍历的对象或类.
+            flag_property: 是否包含@property装饰的函数.
+                默认为False.
             
-        Returns:
-            list: 包含(方法名, 方法对象)元组的列表
+        返回:
+            list: 包含(方法名, 方法对象)元组的列表.
             
-        Note:
-            暂不支持已装饰了@property的函数
+        注意:
+            暂不支持已装饰了@property的函数.
         """
         if not flag_property:
             # 非 _ 开头的方法列表

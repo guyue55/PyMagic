@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+"""LoggerUtils类的单元测试.
+
+此模块包含LoggerUtils类功能的全面测试，
+包括日志创建、配置、文件处理和各种日志场景。
+
+测试类:
+    TestLoggerUtils: LoggerUtils类核心功能测试
+    TestLoggerConfiguration: 日志配置选项测试
+    TestLoggerFileHandling: 基于文件的日志操作测试
+
+作者: Guyue
+许可证: MIT
+"""
+
 import os
 import unittest
 from unittest import mock

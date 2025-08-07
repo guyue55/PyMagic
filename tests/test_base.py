@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+"""Base类的单元测试.
+
+此模块包含Base类功能的全面测试，
+包括初始化、上下文管理、地址解析和异常处理功能。
+
+测试类:
+    TestBase: Base类核心功能测试
+    TestAddressParsing: 地址解析功能测试
+    TestExceptionHandling: 自动异常处理测试
+
+作者: Guyue
+许可证: MIT
+"""
+
 import unittest
 from unittest import mock
 
