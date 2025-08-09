@@ -8,7 +8,7 @@
     Base: 具有异常处理和地址解析功能的基础类
     TestExceptionClass: 用于异常处理演示的测试类
 
-示例:
+Example:
     Base类的基本用法:
     
     >>> class MyClass(Base):
@@ -26,11 +26,13 @@
 版权所有 (C) 2024-2025, 古月居.
 """
 
-from typing import Any, Optional
 from threading import RLock
+from typing import Any, Optional
+
 from loguru import logger
-from pymagic.tools_utils import Tools
+
 from pymagic.decorator_utils import Decorate
+from pymagic.tools_utils import Tools
 
 class Base:
     """提供异常处理、日志记录和地址解析功能的基础类.
@@ -42,10 +44,10 @@ class Base:
     进行自动资源清理。
     
     属性:
-        logger (Logger): 来自loguru的全局日志记录器实例.
-        LOCK (RLock): 用于线程安全操作的线程锁.
+        logger: 来自loguru的全局日志记录器实例.
+        LOCK: 用于线程安全操作的线程锁.
     
-    示例:
+    Example:
         带地址解析的基本用法:
         
         >>> class DatabaseConnection(Base):
@@ -64,13 +66,13 @@ class Base:
         ...     result = db.connect()
     """
     logger = logger
-    LOCK = RLock()
+    LOCK: RLock = RLock()
 
-    def __init__(self, address=None, **kwargs):
+    def __init__(self, address: Optional[str] = None, **kwargs: Any) -> None:
         """使用可选的地址解析初始化Base类.
         
-        参数:
-            address (str, optional): 各种格式的连接地址.
+        Args:
+            address: 各种格式的连接地址.
                 支持的格式包括:
                 - "host:port" (例如: "localhost:8080")
                 - "user:pass@host:port" (例如: "admin:secret@192.168.1.1:3306")
@@ -102,19 +104,19 @@ class Base:
     def __enter__(self) -> 'Base':
         """进入上下文管理器的运行时上下文.
         
-        返回:
-            Base: 实例本身，用于with语句中.
+        Returns:
+            实例本身，用于with语句中.
         """
         return self
 
     @logger.catch()
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """退出运行时上下文并清理资源.
         
         此方法在退出上下文管理器时被调用，
         如果存在close()方法，会自动调用它。
         
-        参数:
+        Args:
             exc_type: 异常类型，如果没有异常发生则为None.
             exc_val: 异常值，如果没有异常发生则为None.
             exc_tb: 异常回溯，如果没有异常发生则为None.
@@ -123,22 +125,22 @@ class Base:
             getattr(self, "close")()
 
     @property
-    def Tools(self):
+    def Tools(self) -> type:
         """获取Tools工具类的访问权限.
         
-        返回:
-            Tools: 包含各种实用函数的Tools类，
-                用于字符串处理、系统检测、文件操作等.
+        Returns:
+            包含各种实用函数的Tools类，
+            用于字符串处理、系统检测、文件操作等.
         """
         return Tools
 
     @property
-    def Decorate(self):
+    def Decorate(self) -> type:
         """获取Decorate装饰器工具类的访问权限.
         
-        返回:
-            Decorate: 包含各种有用装饰器的Decorate类，
-                用于异常处理、计时、线程安全等.
+        Returns:
+            包含各种有用装饰器的Decorate类，
+            用于异常处理、计时、线程安全等.
         """
         return Decorate
 
@@ -172,7 +174,7 @@ class Base:
             - db: 数据库编号(用于Redis格式)
             - addr_suffix: 其他后缀信息
         
-        参数:
+        Args:
             address: 要解析的地址字符串。如果为None，尝试从
                 对象的_address或address属性获取。
         
@@ -272,19 +274,19 @@ class TestExceptionClass(Base):
     此类继承自Base，用于测试Base类提供的
     自动异常处理功能。
     
-    示例:
+    Example:
         >>> test_obj = TestExceptionClass()
         >>> result = test_obj.test_method()  # 由于异常返回False
     """
     
-    def test_method(self):
+    def test_method(self) -> Any:
         """引发异常的测试方法.
         
         此方法故意引发ValueError异常，以演示
         Base类提供的自动异常处理功能。
         
-        返回:
-            Any: 由于异常处理装饰器应该返回False.
+        Returns:
+            由于异常处理装饰器应该返回False.
             
         抛出:
             ValueError: 总是为测试目的抛出此异常.

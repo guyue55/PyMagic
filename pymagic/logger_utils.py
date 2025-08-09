@@ -1,37 +1,37 @@
-# coding: utf-8
-"""
-Logger Utilities
+# -*- coding: utf-8 -*-
+"""日志工具模块.
 
-日志工具模块，封装loguru库，支持生成不同的日志操作实例。
-
+封装loguru库，支持生成不同的日志操作实例。
 提供便捷的日志配置和管理功能，支持多种输出格式和目标。
 
-Copyright (C) 2024-2025, 古月居。
+作者: Guyue
+许可证: MIT
+版权所有 (C) 2024-2025, 古月居.
 """
 
-from typing import Union
 from copy import deepcopy
 from sys import stderr
+from typing import Union
+
 from loguru import logger
-from loguru._logger import Logger, Core
+from loguru._logger import Core, Logger
 
 class LoggerUtils(Logger):
-    """
-    封装loguru库，支持生成不同日志操作实例。
+    """封装loguru库，支持生成不同日志操作实例.
 
     该类继承自loguru的Logger类，提供了更多便捷的日志配置和管理功能。
     支持创建多个日志实例，每个实例可以有不同的配置和输出目标。
 
-    Attributes:
-        logger (Logger): 全局日志实例
-        DEFAULT_SINK (str): 默认日志文件路径
-        FORMAT (str): 标准日志格式，不包含进程和线程信息
-        FORMAT_PT (str): 包含进程和线程信息的日志格式
-        FORMAT_PROCESS (str): 包含进程信息的日志格式
-        FORMAT_THREAD (str): 包含线程信息的日志格式
-        DEFAULT (dict): 默认日志配置参数
+    属性:
+        logger: 全局日志实例.
+        DEFAULT_SINK: 默认日志文件路径.
+        FORMAT: 标准日志格式，不包含进程和线程信息.
+        FORMAT_PT: 包含进程和线程信息的日志格式.
+        FORMAT_PROCESS: 包含进程信息的日志格式.
+        FORMAT_THREAD: 包含线程信息的日志格式.
+        DEFAULT: 默认日志配置参数.
     
-    更多：
+    注意:
         当sink是协程函数时的特殊参数：
             loop：用于调度和执行异步日志任务的事件循环
             
@@ -46,8 +46,7 @@ class LoggerUtils(Logger):
     """
 
     logger: Logger = logger
-    # 默认日志文件路径
-    DEFAULT_SINK = "log/logger.log"
+    DEFAULT_SINK: str = "log/logger.log"
 
     # 日志格式定义
     # 可用变量: {process} {thread} {process.name} {thread.name} {time} {level} 
@@ -236,9 +235,10 @@ class LoggerUtils(Logger):
 
     @classmethod
     def set_log_func(cls, log_obj: Logger):
-        """
-        设置/添加功能函数
-        :return:
+        """设置/添加功能函数到日志对象。
+        
+        Args:
+            log_obj: 日志对象
         """
         # 添加功能函数
         log_obj.get_log = cls.get_log
@@ -249,12 +249,15 @@ class LoggerUtils(Logger):
 
     @classmethod
     def new(cls, sink: str, level="INFO", **kwargs) -> Logger:
-        """
-        生成新日志实例
-        :param sink: 日志文件路径
-        :param level: 日志级别
-        :param kwargs: 其余参数
-        :return:
+        """生成新的日志实例。
+        
+        Args:
+            sink: 日志文件路径
+            level: 日志级别，默认为"INFO"
+            kwargs: 其余loguru配置参数
+            
+        Returns:
+            Logger: 新的日志实例
         """
 
         import atexit

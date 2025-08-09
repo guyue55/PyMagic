@@ -1,44 +1,21 @@
 # coding: utf-8
-"""
-Tools Utilities
+"""常用工具函数模块.
 
 常用工具函数模块，提供各种实用功能，封装常用方法，尽量不涉及复杂逻辑，仅提供基础功能支持。
 
 Copyright (C) 2024-2025, 古月居。
 """
 
-from typing import List, Any, Union, Tuple, Optional, Dict, Iterator, Iterable
 import os
-import time
 import random
+import time
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 from urllib.parse import urlparse
-
-# 减少无用消耗, 尽量改为函数内临时导入方式
-# import sys
-# import shutil
-# import json
-# import platform
-# import inspect
-# import logging
-# import subprocess
-# import socket
-# import configparser
-# import codecs
-# from hashlib import sha1, md5
-# from base64 import b64encode, b64decode
-# import importlib
-# from importlib import import_module, reload
-# from ast import literal_eval
-# import urllib.parse
-# import string
-# import datetime
 
 # Third party imports
 from loguru import logger
 
-
 # Local imports
-# from .logger_utils import logger
 from .decorator_utils import Decorate
 
 # 系统类型，windows or linux
@@ -48,58 +25,61 @@ g_flag_windows: bool = False
 
 
 class Tools:
-    """ 常用方法
-        封装类型划分如下（可通过下列编号搜索代码分布）：
-        一、一些简单判断或功能：如 类型、空值判断等
-        二、一些处理：字符串替換等
-        三、时间和数字相关，时间、休眠方法（定时整数、随机整数、随机浮点数等休眠）
-        四、Json转换：json格式、字符串互转等
-        五、文档操作：读取写入、读为json、读为列表、删除等
-        六、目录（文件）操作：创建、删除、获取文件大小等
-        七、一些特殊功能: python语法相关，如获取类属性、类函数等
-        八、一些调用，如执行cmd、linux命令、加载配置等
-        九、http及网络爬虫相关，如：指纹验证(ja3)
+    """常用工具方法类.
+    
+    封装类型划分如下（可通过下列编号搜索代码分布）：
+    一、一些简单判断或功能：如 类型、空值判断等
+    二、一些处理：字符串替換等
+    三、时间和数字相关，时间、休眠方法（定时整数、随机整数、随机浮点数等休眠）
+    四、Json转换：json格式、字符串互转等
+    五、文档操作：读取写入、读为json、读为列表、删除等
+    六、目录（文件）操作：创建、删除、获取文件大小等
+    七、一些特殊功能: python语法相关，如获取类属性、类函数等
+    八、一些调用，如执行cmd、linux命令、加载配置等
+    九、http及网络爬虫相关，如：指纹验证(ja3)
     """
-
-    # def __init__(self):
-    #     print("工具类初始化")
 
     """ 一、一些简单判断 或其它功能 """
 
     @staticmethod
-    def is_contain_zh(val: Iterator[str]) -> bool:
-        """
-        判断字符串中是否包含中文
-        :param val: 需要检测的字符串
-        :return: 包含返回True，不包含返回False
+    def is_contain_zh(val: Iterable[str]) -> bool:
+        """判断字符串中是否包含中文.
+        
+        Args:
+            val: 需要检测的字符串.
+            
+        Returns:
+            包含返回True，不包含返回False.
         """
         for ch in val:
-            if u'\u4e00' <= ch <= u'\u9fff':
+            if '\u4e00' <= ch <= '\u9fff':
                 return True
         return False
 
     @staticmethod
-    def is_zh(val: Iterator[str]) -> bool:
-        """
-        检查整个字符串是否均为中文
-        :param val:
-        :return:
+    def is_zh(val: Iterable[str]) -> bool:
+        """检查整个字符串是否均为中文.
+        
+        Args:
+            val: 需要检查的字符串.
+            
+        Returns:
+            如果全部为中文返回True，否则返回False.
         """
         for ch in val:
-            if ch < u'\u4e00' or ch > u'\u9fff':
+            if ch < '\u4e00' or ch > '\u9fff':
                 return False
         return True
 
     @staticmethod
-    def is_en(val: Iterator[str]) -> bool:
-        """
-        检查整个字符串是否均为英文字母
+    def is_en(val: Iterable[str]) -> bool:
+        """检查整个字符串是否均为英文字母.
         
         Args:
-            val: 需要检查的字符串迭代器
+            val: 需要检查的字符串.
             
         Returns:
-            如果全部为英文字母返回True，否则返回False
+            如果全部为英文字母返回True，否则返回False.
         """
         import string
         for char in val:
@@ -109,9 +89,10 @@ class Tools:
 
     @staticmethod
     def get_system_type() -> str:
-        """
-        获取操作系统类型
-        :return:
+        """获取操作系统类型.
+        
+        Returns:
+            操作系统类型字符串.
         """
         import platform
         # 获取平台类型
@@ -119,53 +100,55 @@ class Tools:
 
     @classmethod
     def check_system_win(cls) -> Tuple[bool, str]:
-        """
-        检查当前系统是否为Windows
+        """检查当前系统是否为Windows.
         
         Returns:
-            tuple: (是否为Windows系统的布尔值, 系统类型字符串)
+            (是否为Windows系统的布尔值, 系统类型字符串).
         """
         global g_flag_windows
         global g_system_type
-
-        flag_windows = False
 
         # 获取系统类型
         sys_str = cls.get_system_type()
         g_system_type = sys_str
 
-        if sys_str == "Windows":
-            flag_windows = True
-
+        flag_windows = sys_str == "Windows"
         g_flag_windows = flag_windows
+        
         logger.debug(f"[系统] 当前运行环境：{sys_str}系统，路径：{os.getcwd()}")
 
         return flag_windows, sys_str
 
     @classmethod
     def is_windows(cls) -> bool:
-        """
-        是否为Windows系统
-        :return: 
+        """是否为Windows系统.
+        
+        Returns:
+            如果是Windows系统返回True，否则返回False.
         """
         return cls.get_system_type() == "Windows"
 
     @classmethod
     def is_linux(cls) -> bool:
-        """
-        是否为Linux系统
-        :return: 
+        """是否为Linux系统.
+        
+        Returns:
+            如果是Linux系统返回True，否则返回False.
         """
         return cls.get_system_type() == "Linux"
 
     @staticmethod
-    def get_disk_space(path: str = ".", unit='MB', flag_json: bool = False):
-        """
-        获取指定路径的磁盘大小和剩余空间
-        :param path: 路径
-        :param unit: 单位, bytes/MB/GB
-        :param flag_json: 字典格式返回结果
-        :return:
+    def get_disk_space(path: str = ".", unit: str = 'MB', flag_json: bool = False) -> Union[Dict[str, float], Tuple[Optional[float], Optional[float], Optional[float]], None]:
+        """获取指定路径的磁盘大小和剩余空间.
+        
+        Args:
+            path: 路径.
+            unit: 单位, bytes/MB/GB.
+            flag_json: 字典格式返回结果.
+            
+        Returns:
+            如果flag_json为True，返回包含total、free、used的字典；
+            否则返回(总空间, 剩余空间, 已用空间)的元组.
         """
         # 定位到绝对路径
         if path and not path.startswith("/"):
@@ -176,15 +159,15 @@ class Tools:
             import shutil
             # 获取磁盘信息
             disk_info = shutil.disk_usage(path)
-            total_space = disk_info.total
-            free_space = disk_info.free
-            used_space = disk_info.used
+            total_space = float(disk_info.total)
+            free_space = float(disk_info.free)
+            used_space = float(disk_info.used)
 
-            if unit.lower() == 'mb' or unit.lower() == 'm':
+            if unit.lower() in ('mb', 'm'):
                 total_space /= (1024 ** 2)
                 free_space /= (1024 ** 2)
                 used_space /= (1024 ** 2)
-            elif unit.lower() == 'gb' or unit.lower() == 'g':
+            elif unit.lower() in ('gb', 'g'):
                 total_space /= (1024 ** 3)
                 free_space /= (1024 ** 3)
                 used_space /= (1024 ** 3)
@@ -206,12 +189,15 @@ class Tools:
     def check_disk_space(cls, path: str = ".",
                          size: Union[int, float] = 100,
                          unit: str = "MB") -> Optional[bool]:
-        """
-        检测磁盘空间是否足够
-        :param path: 路径
-        :param size: 大小
-        :param unit: 单位, bytes/MB/GB
-        :return:
+        """检测磁盘空间是否足够.
+        
+        Args:
+            path: 路径.
+            size: 大小.
+            unit: 单位, bytes/MB/GB.
+            
+        Returns:
+            如果空间足够返回True，不足返回False，检测失败返回None.
         """
         _, free, _ = cls.get_disk_space(path, unit=unit, flag_json=False)
         if free is None:
@@ -219,121 +205,158 @@ class Tools:
         return free >= size
 
     @staticmethod
-    def list_random_shuffle(list_target: list) -> list:
-        """
-        打乱列表顺序，生成新列表
-        :param list_target: 需混淆的列表
-        :return:
+    def list_random_shuffle(list_target: List[Any]) -> List[Any]:
+        """打乱列表顺序，生成新列表.
+        
+        Args:
+            list_target: 需混淆的列表.
+            
+        Returns:
+            打乱顺序后的列表.
         """
         random.shuffle(list_target)
         return list_target
 
     @staticmethod
-    def check_empty(*args):
+    def check_empty(*args: Any) -> bool:
+        """判断一个或多个变量值是否存在空值.
+        
+        Args:
+            *args: 需要判断的值.
+            
+        Returns:
+            如果存在空值返回True，否则返回False.
         """
-        判断一个或多个变量值是否存在空值，空：True，有值：False
-        is判断效率更高
-        :param args: tuple 需要判断的值
-        :return: bool
-        """
-        result_check = False
         for name in args:
             if name is None:
-                result_check = True
-            elif type(name) is str and name.strip() == "":
-                result_check = True
+                logger.warning(f"警告, 变量为空值: {str(args)}")
+                return True
+            elif isinstance(name, str) and name.strip() == "":
+                logger.warning(f"警告, 变量为空值: {str(args)}")
+                return True
             elif not name:
-                result_check = True
-            # 是否存在
-            if result_check is True:
-                logger.warning("警告, 变量为空值: %s" % (str(args)))
-                return result_check
-        return result_check
-
-    @staticmethod
-    def check_type_one(name, *args):
-        """
-        判断是否为想要的类型, 匹配一种即符合
-        :param name: object 需要判断类型的变量
-        :param args: tuple 需要判断的参数
-        :return: bool
-        """
-        ty = None
-        if name is not None:
-            ty = type(name)
-        for i in args:
-            if ty is i:
+                logger.warning(f"警告, 变量为空值: {str(args)}")
                 return True
         return False
 
     @staticmethod
-    def check_type_all(name: str, *args):
+    def check_type_one(name: Any, *args: type) -> bool:
+        """判断是否为想要的类型, 匹配一种即符合.
+        
+        Args:
+            name: 需要判断类型的变量.
+            *args: 需要判断的类型.
+            
+        Returns:
+            如果匹配任一类型返回True，否则返回False.
         """
-        判断是否为想要的类型, 全部匹配才符合
-        :param name: object 需要判断类型的变量
-        :param args: tuple 传入的参数
-        :return:
+        if name is None:
+            return False
+        
+        name_type = type(name)
+        for target_type in args:
+            if name_type is target_type:
+                return True
+        return False
+
+    @staticmethod
+    def check_type_all(name: Any, *args: type) -> bool:
+        """判断是否为想要的类型, 全部匹配才符合.
+        
+        Args:
+            name: 需要判断类型的变量.
+            *args: 传入的类型参数.
+            
+        Returns:
+            如果匹配所有类型返回True，否则返回False.
         """
-        ty = None
-        if name is not None:
-            ty = type(name)
-        for i in args:
-            if ty is not i:
+        if name is None or not args:
+            return False
+            
+        name_type = type(name)
+        for target_type in args:
+            if name_type is not target_type:
                 return False
-        return False
-
-    @staticmethod
-    def check_str_one(value: str, *args):
-        """
-        判断字符串内是否含有所需值，包含一个即可
-        :param value: str 需检查的字符串
-        :param args: tuple 需要判断的参数
-        :return: bool
-        """
-        if Tools.check_type_one(value, str):
-            for i in args:
-                if i in value:
-                    return True
-        return False
-
-    @staticmethod
-    def check_str_all(value: str, *args):
-        """
-        判断字符串内是否含有所需值，包含所有参数
-        :param value: str 需检查的字符串
-        :param args: tuple 需要判断的参数
-        :return: bool
-        """
-        if Tools.check_type_one(value, str):
-            for i in args:
-                if i not in value:
-                    return False
         return True
 
     @staticmethod
-    def contain_all(value: str, *args) -> bool:
+    def check_str_one(value: str, *args: str) -> bool:
+        """判断字符串内是否含有所需值，包含一个即可.
+        
+        Args:
+            value: 需检查的字符串.
+            *args: 需要判断的参数.
+            
+        Returns:
+            如果包含任一值返回True，否则返回False.
         """
-        判断字符串内是否包含所有值
-        :param value: str 需检查的字符串
-        :param args: str 需要判断的参数
-        :return: bool
-        """
-        return all(i in value for i in args)
+        if not isinstance(value, str):
+            return False
+        
+        for target in args:
+            if target in value:
+                return True
+        return False
 
     @staticmethod
-    def contain_any(value: str, *args) -> bool:
+    def check_str_all(value: str, *args: str) -> bool:
+        """判断字符串内是否含有所需值，包含所有参数.
+        
+        Args:
+            value: 需检查的字符串.
+            *args: 需要判断的参数.
+            
+        Returns:
+            如果包含所有值返回True，否则返回False.
         """
-        判断字符串内是否包含任一值
-        :param value: str 需检查的字符串
-        :param args: str 需要判断的参数
-        :return: bool
+        if not isinstance(value, str):
+            return False
+            
+        for target in args:
+            if target not in value:
+                return False
+        return True
+
+    @staticmethod
+    def contain_all(value: str, *args: str) -> bool:
+        """判断字符串内是否包含所有值.
+        
+        Args:
+            value: 需检查的字符串.
+            *args: 需要判断的参数.
+            
+        Returns:
+            如果包含所有值返回True，否则返回False.
         """
-        return any(i in value for i in args)
+        return all(target in value for target in args)
+
+    @staticmethod
+    def contain_any(value: str, *args: str) -> bool:
+        """判断字符串内是否包含任一值.
+        
+        Args:
+            value: 需检查的字符串.
+            *args: 需要判断的参数.
+            
+        Returns:
+            如果包含任一值返回True，否则返回False.
+        """
+        return any(target in value for target in args)
 
     """ 二、一些处理"""
 
     @staticmethod
-    def deal_jsonstr(value: str) -> Union[str, None]:
+    def deal_jsonstr(value: str) -> Optional[str]:
+        """处理JSON字符串格式.
+        
+        将Python格式的字符串转换为标准JSON格式。
+        
+        Args:
+            value: 需要处理的字符串.
+            
+        Returns:
+            处理后的JSON格式字符串，如果输入为空则返回原值.
+        """
         if value and ("True" in value or "False" in value or "'" in value):
             # 字符串特殊处理
             return value.replace("'", "\"").replace("True", "true") \
@@ -345,22 +368,28 @@ class Tools:
 
     @staticmethod
     def format_time(timestamp: Union[float, int], fmt: str = "%Y-%m-%d %H:%M:%S") -> str:
-        """
-        转换时间(日期)格式
-        :param timestamp: 时间戳
-        :param fmt: 格式
-        :return:
+        """转换时间(日期)格式.
+        
+        Args:
+            timestamp: 时间戳.
+            fmt: 时间格式字符串.
+            
+        Returns:
+            格式化后的时间字符串.
         """
         return time.strftime(fmt, time.localtime(timestamp))
 
     @staticmethod
     @Decorate.catch(None)
-    def to_timestamp(time_str: str, fmt: str = None) -> Optional[int]:
-        """
-        时间字符串转时间戳，单位：秒
-        :param time_str: 时间字符串
-        :param fmt: 格式
-        :return:
+    def to_timestamp(time_str: str, fmt: Optional[str] = None) -> Optional[int]:
+        """时间字符串转时间戳，单位：秒.
+        
+        Args:
+            time_str: 时间字符串.
+            fmt: 时间格式字符串，如果为None则使用第三方库解析.
+            
+        Returns:
+            时间戳（秒），转换失败返回None.
         """
         if not fmt:
             return Tools.to_timestamp_other(time_str)
@@ -368,39 +397,42 @@ class Tools:
         # time.mktime(time.strptime("2011-09-28 10:00:00", '%Y-%m-%d %H:%M:%S'))
         try:
             return int(time.mktime(time.strptime(time_str.strip(), fmt)))
-        except:
+        except Exception:
             return Tools.to_timestamp_datetime(time_str.strip(), fmt)
-        # datetime.strptime("July 28 at 5:27 PM", "%B %d at %H:%M PM")
-        # return Timto_timestamp_datetime()
 
     @staticmethod
     @Decorate.catch(None)
-    def to_timestamp_datetime(time_str: str, fmt: str = None) -> Optional[int]:
-        """
-        时间字符串转时间戳，单位：秒
-        :param time_str: 时间字符串
-        :param fmt: 格式
-        :return:
+    def to_timestamp_datetime(time_str: str, fmt: Optional[str] = None) -> Optional[int]:
+        """使用datetime模块将时间字符串转时间戳，单位：秒.
+        
+        Args:
+            time_str: 时间字符串.
+            fmt: 时间格式字符串.
+            
+        Returns:
+            时间戳（秒），转换失败返回None.
         """
         import datetime
         # 将时间字符串转换为datetime对象
         obj = datetime.datetime.strptime(time_str, fmt)
 
         # 将datetime对象转换为时间戳
-        # timestamp = obj.timestamp()
         return int(obj.timestamp())
 
     @staticmethod
     @Decorate.catch(0)
     def to_timestamp_other(time_str: str) -> int:
-        """
-        (第三方库)时间字符串转时间戳，单位：秒
-        :param time_str:
-        :return:
+        """使用第三方库pendulum将时间字符串转时间戳，单位：秒.
+        
+        Args:
+            time_str: 时间字符串.
+            
+        Returns:
+            时间戳（秒），转换失败返回0.
         """
         try:
             from pendulum import parse
-        except:
+        except ImportError:
             cmd = "python3 -m pip install pendulum"
             logger.warning("not found library pendulum, default install...: %s" % cmd)
             # 安装
@@ -408,40 +440,41 @@ class Tools:
             Tools.sleep(3)
         # pip install pendulum == 2.1.2
         from pendulum import parse
-        # Toronto的时间
-        # dt = pendulum.parse("2022-06-04 23:11:35+08:00")
         return int(parse(time_str).timestamp())
 
     @staticmethod
     def get_timestamp() -> int:
-        """
-        时间戳，单位：秒
-        :return: int
+        """获取当前时间戳，单位：秒.
+        
+        Returns:
+            当前时间戳（秒）.
         """
         return int(time.time())
 
     @staticmethod
-    def get_timestamp_float() -> int:
-        """
-        时间戳，单位：秒
-        :return: float
+    def get_timestamp_float() -> float:
+        """获取当前时间戳，单位：秒（浮点数）.
+        
+        Returns:
+            当前时间戳（秒，浮点数）.
         """
         return time.time()
 
     @staticmethod
     def get_timestamp_ms() -> int:
-        """
-        时间戳，单位：毫秒
-        :return: int
+        """获取当前时间戳，单位：毫秒.
+        
+        Returns:
+            当前时间戳（毫秒）.
         """
         return int(time.time() * 1000)
 
     @staticmethod
-    # def get_timestamp_μs() -> int:
     def get_timestamp_us() -> int:
-        """
-        时间戳，单位：微秒
-        :return: int
+        """获取当前时间戳，单位：微秒.
+        
+        Returns:
+            当前时间戳（微秒）.
         """
         return int(time.time() * 1000000)
 
@@ -459,77 +492,80 @@ class Tools:
         return time.perf_counter()
 
     @staticmethod
-    def get_nowdate(fmt="%Y-%m-%d %H:%M:%S") -> str:
-        """
-        系统日期, 精确到秒
-        :param fmt: 时间格式
-        :return: str
+    def get_nowdate(fmt: str = "%Y-%m-%d %H:%M:%S") -> str:
+        """获取当前系统日期，精确到秒.
+        
+        Args:
+            fmt: 时间格式字符串.
+            
+        Returns:
+            格式化的当前日期时间字符串.
         """
         return time.strftime(fmt, time.localtime())
 
     @staticmethod
-    def get_nowdate_ms(fmt="%Y-%m-%d %H:%M:%S.%f") -> str:
-        """
-        系统日期, 精确到毫秒
-        :param fmt: 时间格式
-        :return: str
+    def get_nowdate_ms(fmt: str = "%Y-%m-%d %H:%M:%S.%f") -> str:
+        """获取当前系统日期，精确到毫秒.
+        
+        Args:
+            fmt: 时间格式字符串.
+            
+        Returns:
+            格式化的当前日期时间字符串（毫秒精度）.
         """
         import datetime
         return datetime.datetime.now().strftime(fmt)[:-3]
 
     @staticmethod
-    def get_nowdate_us(fmt="%Y-%m-%d %H:%M:%S.%f") -> str:
-        """
-        系统日期, 精确到微秒
-        :param fmt: 时间格式
-        :return: str
+    def get_nowdate_us(fmt: str = "%Y-%m-%d %H:%M:%S.%f") -> str:
+        """获取当前系统日期，精确到微秒.
+        
+        Args:
+            fmt: 时间格式字符串.
+            
+        Returns:
+            格式化的当前日期时间字符串（微秒精度）.
         """
         import datetime
         return datetime.datetime.now().strftime(fmt)
 
     @staticmethod
-    def get_nowdate_number(fmt="%Y%m%d%H%M%S") -> str:
-        """
-        系统日期，纯数字格式, 精确到秒
-        注：精确到毫秒 %Y%m%d%H%M%S%M
-        :param fmt: 时间格式
-        :return: str
+    def get_nowdate_number(fmt: str = "%Y%m%d%H%M%S") -> str:
+        """获取当前系统日期，纯数字格式，精确到秒.
+        
+        Args:
+            fmt: 时间格式字符串.
+            
+        Returns:
+            纯数字格式的当前日期时间字符串.
+            
+        注意:
+            精确到毫秒可使用格式 %Y%m%d%H%M%S%f.
         """
         return Tools.get_nowdate(fmt=fmt)
 
     @staticmethod
-    def get_localtime_tuple(timestamp: int = None) -> tuple:
+    def get_localtime_tuple(timestamp: Optional[int] = None) -> time.struct_time:
+        """获取时间各单位的元组.
+        
+        Args:
+            timestamp: 时间戳（单位秒），默认使用当前时间.
+            
+        Returns:
+            时间结构体，包含(year, mon, day, hour, min, sec, weekday, jday, isdst).
         """
-        获取当前时间各单位
-        :param timestamp: 时间戳(单位秒), 默认使用当前时间
-        :return: tuple(year, mon, day, hour, min, sec, weekday, jday, isdst)
-        """
-        '''
-        int tm_year; /* 年份，其值等于实际年份减去1900 */
-        int tm_mon; /* 月份（从一月开始，0代表一月） - 取值区间为[0,11] */
-        int tm_mday; /* 一个月中的日期 - 取值区间为[1,31] */
-        int tm_hour; /* 时 - 取值区间为[0,23] */
-        int tm_min; /* 分 - 取值区间为[0,59] */
-        int tm_sec; /* 秒 – 取值区间为[0,59] */
-        int tm_wday; /* 星期 – 取值区间为[0,6]，其中0代表星期一，1代表星期二，以此类推 */
-        int tm_yday; /* 从每年的1月1日开始的天数 – 取值区间为[0,365]，其中0代表1月1日，1代表1月2日，以此类推 */
-        int tm_isdst; /* 夏令时标识符，实行夏令时的时候，tm_isdst为正。
-                                    不实行夏令时的时候，tm_isdst为0；不了解情况时，tm_isdst()为负。*/
-        '''
-        # year, mon, day, hour, min, sec, weekday, jday, isdst = time.localtime(time.time())
-        # return y, m, d, hh, mm, ss, weekday, jday, dst
-        # time.struct_time(tm_year=2022, tm_mon=1, tm_mday=28, tm_hour=14,
-        #           tm_min=55, tm_sec=54, tm_wday=4, tm_yday=28, tm_isdst=0)
-        # return time.localtime(time.time())
-        # 当前时间
         return time.localtime(timestamp)
 
     @staticmethod
-    def get_date_tuple(timestamp: int = None) -> tuple:
-        """
-        获取当前时间各单位
-        :param timestamp: 时间戳(单位秒), 默认使用当前时间
-        :return: tuple(year, mon, day, hour, min, sec, weekday, jday, isdst)
+    def get_date_tuple(timestamp: Optional[int] = None) -> Tuple[int, int, int, int, int, int, int, int, int]:
+        """获取时间各单位的元组（星期已调整）.
+        
+        Args:
+            timestamp: 时间戳（单位秒），默认使用当前时间.
+            
+        Returns:
+            时间元组(year, mon, day, hour, min, sec, weekday, jday, isdst)，
+            其中weekday已调整为1-7（1代表星期一）.
         """
         # 日期参数格式化（年月日时分秒）
         year, mon, day, hour, min, sec, weekday, jday, isdst = Tools.get_localtime_tuple(timestamp)
@@ -537,93 +573,93 @@ class Tools:
         return year, mon, day, hour, min, sec, weekday + 1, jday, isdst
 
     @classmethod
-    def get_now_year(cls):
-        """
-        当前年
-        /* 年份 */
-        :return:
+    def get_now_year(cls) -> int:
+        """获取当前年份.
+        
+        Returns:
+            当前年份.
         """
         return cls.get_localtime_tuple()[0]
 
     @classmethod
-    def get_now_month(cls):
-        """
-        当前月
-        /* 月份（从一月开始，0代表一月） - 取值区间为[0,11] */
-        注: 实际测试发现区间为 [1,12]，所以无需+1
-        :return:
+    def get_now_month(cls) -> int:
+        """获取当前月份.
+        
+        Returns:
+            当前月份，取值区间为[1,12].
         """
         return cls.get_localtime_tuple()[1]
 
     @classmethod
-    def get_now_day(cls):
-        """
-        /* 一个月中的日期 - 取值区间为[1,31] */
-        :return:
+    def get_now_day(cls) -> int:
+        """获取当前日期.
+        
+        Returns:
+            一个月中的日期，取值区间为[1,31].
         """
         return cls.get_localtime_tuple()[2]
 
     @classmethod
-    def get_now_hour(cls):
-        """
-        /* 时 - 取值区间为[0,23] */
-        :return:
+    def get_now_hour(cls) -> int:
+        """获取当前小时.
+        
+        Returns:
+            当前小时，取值区间为[0,23].
         """
         return cls.get_localtime_tuple()[3]
 
     @classmethod
-    def get_now_minute(cls):
-        """
-        /* 分 - 取值区间为[0,59] */
-        :return:
+    def get_now_minute(cls) -> int:
+        """获取当前分钟.
+        
+        Returns:
+            当前分钟，取值区间为[0,59].
         """
         return cls.get_localtime_tuple()[4]
 
     @classmethod
-    def get_now_second(cls):
-        """
-        /* 秒 – 取值区间为[0,59] */
-        :return:
+    def get_now_second(cls) -> int:
+        """获取当前秒数.
+        
+        Returns:
+            当前秒数，取值区间为[0,59].
         """
         return cls.get_localtime_tuple()[5]
 
     @classmethod
-    def get_now_week(cls):
+    def get_now_week(cls) -> int:
+        """获取当前星期.
+        
+        Returns:
+            星期，取值区间为[0,6]，其中0代表星期一，1代表星期二，以此类推.
         """
-        星期 – 周x
-        /* 星期 – 取值区间为[0,6]，其中0代表星期一，1代表星期二，以此类推 */
-        :return:
-        """
-        # return cls.get_localtime_tuple()[6] + 1
-
         return cls.get_localtime_tuple()[6]
 
     @classmethod
-    def get_now_yday(cls):
-        """
-        今年的第xxx天, 取值区间为[0,365]
-        /* 从每年的1月1日开始的天数 – 取值区间为[0,365]，其中0代表1月1日，1代表1月2日，以此类推 */
-        :return:
+    def get_now_yday(cls) -> int:
+        """获取今年的第几天.
+        
+        Returns:
+            从每年的1月1日开始的天数，取值区间为[1,366].
         """
         return cls.get_localtime_tuple()[7]
 
     @classmethod
-    def get_now_isdst(cls):
-        """
-        夏令时标识符，实行夏令时的时候，tm_isdst为正。
-             不实行夏令时的时候，tm_isdst为0；不了解情况时，tm_isdst()为负。
-        :return:
+    def get_now_isdst(cls) -> int:
+        """获取夏令时标识符.
+        
+        Returns:
+            夏令时标识符，实行夏令时时为正数，不实行时为0，不了解情况时为负数.
         """
         return cls.get_localtime_tuple()[8]
 
     @staticmethod
-    # def sleep(int_num: int):
-    def sleep(seconds: float, max_seconds: float = None):
-        """
-        定时休眠
-        :param seconds: 秒
-        :param max_seconds: 最大休息时间, 即调用随机休眠
-        :return:
+    def sleep(seconds: float, max_seconds: Optional[float] = None) -> None:
+        """定时休眠.
+        
+        Args:
+            seconds: 休眠秒数.
+            max_seconds: 最大休眠时间，如果指定则调用随机休眠.
         """
         if max_seconds:
             # 随机休眠
@@ -632,12 +668,12 @@ class Tools:
             time.sleep(seconds)
 
     @staticmethod
-    def sleep_random_int(int_start: int = 1, int_end: int = 5):
-        """
-        随机休眠，单位：整秒
-        :param int_start: int
-        :param int_end: int
-        :return:
+    def sleep_random_int(int_start: int = 1, int_end: int = 5) -> None:
+        """随机休眠，单位：整秒.
+        
+        Args:
+            int_start: 最小休眠秒数.
+            int_end: 最大休眠秒数.
         """
         if int_start > int_end:
             int_end = int_start + 1
@@ -645,12 +681,12 @@ class Tools:
         Tools.sleep(random.randint(int_start, int_end))
 
     @staticmethod
-    def sleep_random(float_start: float = 1.8, float_end: float = 5.0):
-        """
-        随机休眠，单位：秒，浮点数
-        :param float_start: float
-        :param float_end: float
-        :return:
+    def sleep_random(float_start: float = 1.8, float_end: float = 5.0) -> None:
+        """随机休眠，单位：秒，浮点数.
+        
+        Args:
+            float_start: 最小休眠秒数.
+            float_end: 最大休眠秒数.
         """
         if float_start > float_end:
             float_end = float_start + 0.1
@@ -661,16 +697,17 @@ class Tools:
 
     @staticmethod
     @Decorate.catch(None)
-    def to_json(obj: Union[str, dict], encoding="utf-8") -> Optional[dict]:
-        """
-        对象转json
-        :param obj: 需转为json的目标
-        :param encoding: json.loads转码格式
-        :return: dict
+    def to_json(obj: Union[str, dict], encoding: str = "utf-8") -> Optional[dict]:
+        """对象转JSON字典.
+        
+        Args:
+            obj: 需转为JSON的目标对象.
+            encoding: JSON解码格式.
+            
+        Returns:
+            解析后的字典对象，失败返回None.
         """
         if not Tools.check_empty(obj):
-            # if Tools.check_type_one(obj, str):
-            #     obj = Tools.deal_jsonstr(obj)
             try:
                 import json
                 return json.loads(obj, encoding=encoding)
@@ -684,13 +721,19 @@ class Tools:
 
     @staticmethod
     @Decorate.catch(None)
-    def to_jsonstr(obj: Union[str, dict, list, tuple]) -> Union[str, None]:
-
-        """
-        对象转json字符串, 主要针对字典
-        注：字符串特殊处理可能存在问题
-        :param obj: 需转为json字符串的目标
-        :return: str
+    def to_jsonstr(obj: Union[str, dict, list, tuple]) -> Optional[str]:
+        """对象转JSON字符串.
+        
+        主要针对字典、列表等对象的JSON序列化。
+        
+        Args:
+            obj: 需转为JSON字符串的目标对象.
+            
+        Returns:
+            JSON格式字符串，失败返回None.
+            
+        注意:
+            字符串会进行特殊处理以确保JSON格式正确.
         """
         # 可迭代对象或不为空
         if isinstance(obj, Iterable) or not Tools.check_empty(obj):
@@ -708,18 +751,18 @@ class Tools:
     @staticmethod
     def write(filename: str, data: Union[bytes, str, list], mode: str = 'w',
               encoding: str = 'utf-8', flag_mkdir: bool = True) -> bool:
+        """写入文件.
+        
+        Args:
+            filename: 文件路径.
+            data: 需写入的数据.
+            mode: 文件操作模式，常见 w、w+、a、a+.
+            encoding: 文件编码格式.
+            flag_mkdir: 是否需要创建目录.
+            
+        Returns:
+            写入成功返回True，失败返回False.
         """
-        默认写入文件
-        :param filename: str 文件路径
-        :param data:  需写入的数据
-        :param mode: str 操作模式w，常见 w、w+、a、a+
-        :param encoding: str 文件打开编码
-        :param flag_mkdir: bool 是否需要创建目录
-        :return: bool
-        """
-        # if not Tools.check_type_one(data, str):
-        #     data = str(data)
-        # filename = Tools.deal_path(filename)
         if flag_mkdir is True:
             Tools.makedirs(filename, flag_file=True)
         if "b" in mode:
@@ -734,70 +777,78 @@ class Tools:
                     f.write(data)
             return True
         except Exception as e:
-            print("fail, write file of mode %s... %s: %s" % (mode, filename, e))
+            logger.error("fail, write file of mode %s... %s: %s" % (mode, filename, e))
         return False
 
     @staticmethod
-    def write_str(filename: str, data: object, mode: str = 'w', encoding: str = 'utf-8'):
+    def write_str(filename: str, data: Any, mode: str = 'w', encoding: str = 'utf-8') -> bool:
+        """写入字符串到文件.
+        
+        Args:
+            filename: 文件路径.
+            data: 需写入的数据.
+            mode: 写入模式.
+            encoding: 文件编码格式.
+            
+        Returns:
+            写入成功返回True，失败返回False.
         """
-        清空或创建文件，写入字符串
-        :param filename: 文件路径
-        :param data: 需写入的数据
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
-        """
-        if type(data) is not str:
+        if not isinstance(data, str):
             data = str(data)
         return Tools.write(filename, data, mode=mode, encoding=encoding)
 
     @staticmethod
-    def write_str_list(filename: str, datas: Union[list, set], end='\n', mode: str = 'w',
-                       encoding: str = 'utf-8'):
-        """
-        清空或创建文件，并写入字符串列表, 默认换行
-        :param filename: 文件路径
-        :param datas: 需写入的数据列表
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
+    def write_str_list(filename: str, datas: Union[List[Any], set], end: str = '\n', mode: str = 'w',
+                       encoding: str = 'utf-8') -> bool:
+        """写入字符串列表到文件.
+        
+        Args:
+            filename: 文件路径.
+            datas: 需写入的数据列表.
+            end: 行结尾字符，默认换行.
+            mode: 写入模式.
+            encoding: 文件编码格式.
+            
+        Returns:
+            写入成功返回True，失败返回False.
         """
         return Tools.write(filename, [str(i) + end for i in datas], mode=mode, encoding=encoding)
 
     @staticmethod
     def write_json(filename: str, data: Union[dict, str, list, Any],
-                   mode: str = 'w', encoding: str = 'utf-8'):
+                   mode: str = 'w', encoding: str = 'utf-8') -> bool:
+        """以JSON格式写入文件.
+        
+        Args:
+            filename: 文件路径.
+            data: 需写入的数据.
+            mode: 写入模式.
+            encoding: 文件编码格式.
+            
+        Returns:
+            写入成功返回True，失败返回False.
         """
-        清空或创建文件，json格式写入文件
-        :param filename: str
-        :param data: 需写入的数据，str、json
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
-        """
-        # type = type(data)
-
-        # return Tools.write(filename, data, mode=mode, encoding=encoding)
         # 非空路径
         if not Tools.check_empty(filename):
-            # if Tools.check_type_one(data, dict, str):
             data = Tools.to_jsonstr(data)
             Tools.makedirs(filename, flag_file=True)
             return Tools.write(filename, data, mode=mode, encoding=encoding)
         return False
 
     @staticmethod
-    def write_json_list(filename: str, datas: List[dict or str], end='\n', mode: str = 'w',
+    def write_json_list(filename: str, datas: List[dict or str], end: str = '\n', mode: str = 'w',
                         encoding: str = 'utf-8') -> bool:
-        """
-        清空或创建文件，以json格式写入数据列表
-        :param filename: str
-        :param datas: 需写入的数据
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
+        """清空或创建文件，以JSON格式写入数据列表。
+        
+        Args:
+            filename: 文件路径
+            datas: 需写入的数据列表
+            end: 结尾字符，默认换行
+            mode: 写入模式
+            encoding: 文件编码格式
+            
+        Returns:
+            写入成功返回True，否则返回False
         """
         # 非空路径
         if not Tools.check_empty(filename):
@@ -808,16 +859,19 @@ class Tools:
         return False
 
     @staticmethod
-    def save_str(filename: str, data: object, end='\n', mode='a',
-                 encoding='utf-8') -> bool:
-        """
-        字符串保存, 默认换行
-        :param filename: 文件路径
-        :param data: 需写入的数据
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
+    def save_str(filename: str, data: object, end: str = '\n', mode: str = 'a',
+                 encoding: str = 'utf-8') -> bool:
+        """字符串保存，默认换行。
+        
+        Args:
+            filename: 文件路径
+            data: 需写入的数据
+            end: 结尾字符，默认换行
+            mode: 写入模式
+            encoding: 文件编码格式
+            
+        Returns:
+            写入成功返回True，否则返回False
         """
         # if type(data) is not str:
         #     data = str(data)
@@ -826,46 +880,54 @@ class Tools:
     @staticmethod
     def save_str_list(filename: str, datas: Union[List[Any], set], end: str = '\n', mode: str = 'a',
                       encoding: str = 'utf-8') -> bool:
-        """
-        保存字符串列表, 默认换行
-        :param filename: 文件路径
-        :param datas: 需写入的数据
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
+        """保存字符串列表，默认换行。
+        
+        Args:
+            filename: 文件路径
+            datas: 需写入的数据列表或集合
+            end: 结尾字符，默认换行
+            mode: 写入模式
+            encoding: 文件编码格式
+            
+        Returns:
+            写入成功返回True，否则返回False
         """
         return Tools.write(filename, [str(i) + end for i in datas],
                            mode=mode, encoding=encoding)
 
     @staticmethod
     def save_json(filename: str, data: Union[dict, str], end: str = '\n',
-                  mode: str = 'a', encoding: str = 'utf-8'):
+                  mode: str = 'a', encoding: str = 'utf-8') -> bool:
+        """JSON格式保存，默认换行。
+        
+        Args:
+            filename: 文件路径
+            data: 需写入的数据
+            end: 结尾字符，默认换行
+            mode: 写入模式
+            encoding: 文件编码格式
+            
+        Returns:
+            写入成功返回True，否则返回False
         """
-        json格式保存, 默认换行
-        :param filename: 文件路径
-        :param data: 需写入的数据
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
-        """
-        # type = type(data)
         if Tools.check_type_one(data, dict, str):
             data = Tools.to_jsonstr(data)
         return Tools.write(filename, "%s%s" % (data, end), mode=mode, encoding=encoding)
 
     @staticmethod
     def save_json_list(filename: str, datas: List[dict or str], end: str = '\n', mode: str = 'a',
-                       encoding: str = 'utf-8'):
-        """
-        json格式保存列表, 默认换行
-        :param filename: 文件路径
-        :param datas: 需写入的数据
-        :param end: 结尾，默认换行
-        :param mode: 写入模式
-        :param encoding: 文件编码格式
-        :return: bool
+                       encoding: str = 'utf-8') -> bool:
+        """JSON格式保存列表，默认换行。
+        
+        Args:
+            filename: 文件路径
+            datas: 需写入的数据列表
+            end: 结尾字符，默认换行
+            mode: 写入模式
+            encoding: 文件编码格式
+            
+        Returns:
+            写入成功返回True，否则返回False
         """
         return Tools.write(filename, [Tools.to_jsonstr(i) + end
                                       if isinstance(i, dict) else str(i) + end
@@ -887,14 +949,18 @@ class Tools:
     @Decorate.catch(None)
     def read(filename: str, size: int = -1, mode: str = 'r', encoding: str = 'utf-8') \
             -> Union[str, None]:
-        """
-        读取整个文件
+        """读取整个文件。
+        
         read([size])方法从文件当前位置起读取size个字节，若无参数size，则表示读取至文件结束为止，它返回为字符串对象。
-        :param filename: str 文件路径
-        :param size: int 读取大小，默认读取所有
-        :param mode: str 操作模式w
-        :param encoding: str 文件打开编码
-        :return: str
+        
+        Args:
+            filename: 文件路径
+            size: 读取大小，默认读取所有
+            mode: 操作模式
+            encoding: 文件打开编码
+            
+        Returns:
+            文件内容字符串，读取失败返回None
         """
         # 二进制不设置格式
         if "b" in mode:
@@ -905,12 +971,15 @@ class Tools:
 
     @staticmethod
     def read_list(filename: str, mode: str = 'r', encoding: str = 'utf-8') -> List[str]:
-        """
-        默认读取列表方法，按行读取
-        :param filename: str 文件路径
-        :param mode: str 操作模式w
-        :param encoding: str 文件打开编码
-        :return: list
+        """默认读取列表方法，按行读取。
+        
+        Args:
+            filename: 文件路径
+            mode: 操作模式
+            encoding: 文件打开编码
+            
+        Returns:
+            文件内容列表
         """
         return Tools.read_list_line(filename, mode=mode, encoding=encoding)
 
@@ -918,55 +987,61 @@ class Tools:
     # @Decorate.time_run
     @Decorate.catch(list())
     def read_list_line(filename: str, mode: str = 'r', encoding: str = 'utf-8') -> List[str]:
+        """推荐：一行行读取，节省内存。
+        
+        Args:
+            filename: 文件路径
+            mode: 操作模式
+            encoding: 文件打开编码
+            
+        Returns:
+            文件内容列表
         """
-        推荐：一行行读取，节省内存
-        :param filename: str 文件路径
-        :param mode: str 操作模式w
-        :param encoding: str 文件打开编码
-        :return: list
-        """
-
         list_tmp = []
         with open(filename, mode=mode, encoding=encoding) as f:
             while True:
-                i = f.readline().strip()
-                if i == "":
-                    # print("66666:",i, type(i))
+                line = f.readline().strip()
+                if line == "":
                     break
-                line = i.strip()
-                if line != "":
+                if line:
                     list_tmp.append(line)
         return list_tmp
 
     @staticmethod
     # @Decorate.time_run
     @Decorate.catch(list())
-    def read_list_lines(filename: str, mode: str = 'r', encoding: str = 'utf-8'):
-        """
-        预选整个文件保存列表
-        不太推荐，占内存
-        :param filename: str 文件路径
-        :param mode: str 操作模式w
-        :param encoding: str 文件打开编码
-        :return: list
+    def read_list_lines(filename: str, mode: str = 'r', encoding: str = 'utf-8') -> List[str]:
+        """预选整个文件保存列表。
+        
+        注意：不太推荐，占内存
+        
+        Args:
+            filename: 文件路径
+            mode: 操作模式
+            encoding: 文件打开编码
+            
+        Returns:
+            文件内容列表
         """
         list_tmp = []
         with open(filename, mode=mode, encoding=encoding) as f:
-            for i in f.readlines():
-                line = i.strip()
-                if line != "":
+            for line in f.readlines():
+                line = line.strip()
+                if line:
                     list_tmp.append(line)
         return list_tmp
 
     @staticmethod
-    def read_json(filename: str, mode: str = 'r', encoding: str = 'utf-8-sig') \
-            -> Optional[dict]:
-        """
-        读取json文件, 返回json
-        :param filename: str 文件路径
-        :param mode: str 操作模式
-        :param encoding: str 文件打开编码
-        :return: dict
+    def read_json(filename: str, mode: str = 'r', encoding: str = 'utf-8-sig') -> Optional[dict]:
+        """读取json文件，返回json。
+        
+        Args:
+            filename: 文件路径
+            mode: 操作模式
+            encoding: 文件打开编码
+            
+        Returns:
+            JSON数据字典，如果读取失败返回None
         """
         data = Tools.read(filename, mode=mode, encoding=encoding)
         if data:
@@ -978,23 +1053,28 @@ class Tools:
     @staticmethod
     # @Decorate.time_run
     @Decorate.catch(-1)
-    def get_file_size(filename) -> int:
-        """
-        获取文件大小，字节
-        :param filename: 文件路径
-        :return: int
+    def get_file_size(filename: str) -> int:
+        """获取文件大小（字节）。
+        
+        Args:
+            filename: 文件路径
+            
+        Returns:
+            文件大小（字节），失败时返回-1
         """
         return int(os.path.getsize(filename))
 
     @staticmethod
     @Decorate.catch(-1)
-    def get_file_mtime(filename) -> float:
+    def get_file_mtime(filename: str) -> float:
+        """获取文件修改时间。
+        
+        Args:
+            filename: 文件路径
+            
+        Returns:
+            文件修改时间戳（例如：1644566050.978794），失败时返回-1
         """
-        获取文件修改时间
-        :param filename: 文件路径
-        :return: float
-        """
-        # Example: 1644566050.978794
         return os.stat(filename).st_mtime
 
     @staticmethod
@@ -1014,37 +1094,43 @@ class Tools:
         return False
 
     @staticmethod
-    def isdir(path: str):
-        """
-        判断目标是否为目录
-        :param path: string, bytes, os.PathLike or integer
-        :return: bool
+    def isdir(path: str) -> bool:
+        """判断目标是否为目录。
+        
+        Args:
+            path: 路径（string, bytes, os.PathLike or integer）
+            
+        Returns:
+            如果是目录返回True，否则返回False
         """
         if path is not None and os.path.isdir(path):
             return True
-        # print("warn, not isdir path：%s" % path)
         return False
 
     @staticmethod
-    def isfile(file: str):
-        """
-        判断目标是否为文件
-        Test whether a path is a regular file
-        :param file: string, bytes, os.PathLike or integer
-        :return: bool
+    def isfile(file: str) -> bool:
+        """判断目标是否为文件。
+        
+        Args:
+            file: 文件路径（string, bytes, os.PathLike or integer）
+            
+        Returns:
+            如果是文件返回True，否则返回False
         """
         if file is not None and os.path.isfile(file):
             return True
-        # print("warn, not isfile file：%s" % file)
         return False
 
     @staticmethod
     def is_same_file(src: str, dest: str) -> Optional[bool]:
-        """
-        是否为同一文件
-        :param src:
-        :param dest:
-        :return:
+        """判断是否为同一文件。
+        
+        Args:
+            src: 源文件路径
+            dest: 目标文件路径
+            
+        Returns:
+            如果是同一文件返回True，不是返回False，无法判断返回None
         """
         if Tools.isfile(src) and Tools.isfile(dest):
             return Tools.encode_md5_file(src) == Tools.encode_md5_file(dest)
@@ -1055,22 +1141,28 @@ class Tools:
     # @Decorate.time_run
     @Decorate.catch(list())
     def listdirs(path: str) -> List[str]:
-        """
-        遍历返回目录（文件）名列表
-        :param path: str
-        :return: list
+        """遍历返回目录（文件）名列表。
+        
+        Args:
+            path: 目录路径
+            
+        Returns:
+            目录和文件名列表
         """
         return os.listdir(path)
 
     @classmethod
     @Decorate.catch(list())
-    def listdirs_scandir(cls, path_dir, mode: int = 0, depth: int = 1) -> List[str]:
-        """
-        遍历目标路径
-        :param path_dir: 需遍历目标路径
-        :param mode: 模式选择，0：所有，1：文件夹，2：文件
-        :param depth: 遍历深度，<=-1 则遍历所有
-        :return:
+    def listdirs_scandir(cls, path_dir: str, mode: int = 0, depth: int = 1) -> List[str]:
+        """遍历目标路径。
+        
+        Args:
+            path_dir: 需遍历目标路径
+            mode: 模式选择（0：所有，1：文件夹，2：文件）
+            depth: 遍历深度（<=-1 则遍历所有）
+            
+        Returns:
+            符合条件的路径列表
         """
         list_dirs: list = list()
 
@@ -1108,13 +1200,16 @@ class Tools:
     @Decorate.catch(list())
     def listdirs_walk(path: str, mode: int = 0, flag_complete: bool = True,
                       flag_tree: bool = False) -> List[str]:
-        """
-        推荐，遍历目标目录下的 所有目录(或文件或文件夹)列表，可遍历整个目录树
-        :param path: str，需遍历目标路径
-        :param mode: int, 模式选择，0：所有，1：文件夹，2：文件
-        :param flag_complete: bool，是否返回完整路径
-        :param flag_tree: bool，是否遍历整个目录树
-        :return: list
+        """推荐：遍历目标目录下的所有目录（或文件或文件夹）列表，可遍历整个目录树。
+        
+        Args:
+            path: 需遍历目标路径
+            mode: 模式选择（0：所有，1：文件夹，2：文件）
+            flag_complete: 是否返回完整路径
+            flag_tree: 是否遍历整个目录树
+            
+        Returns:
+            符合条件的路径列表
         """
         # 绝对路径
         if flag_complete is True:
@@ -1164,12 +1259,16 @@ class Tools:
         return list_result
 
     @staticmethod
-    def join_path(*args):
-        """
-        拼接路径
-        注：发现os.path.join回对绝对路径去重，导致与预期路径不符
-        :param args:
-        :return:
+    def join_path(*args) -> str:
+        """拼接路径。
+        
+        注意：发现os.path.join会对绝对路径去重，导致与预期路径不符
+        
+        Args:
+            *args: 路径组件
+            
+        Returns:
+            拼接后的路径
         """
         path_all = ""
         # 路径分隔符，一般为 /
@@ -1190,35 +1289,39 @@ class Tools:
         return path_all
 
     @classmethod
-    def deal_path(cls, data: str, replace: str = "_"):
-        """
-        处理(替换)路径中命名中的不规范字符
-        :param data:
-        :param replace:
-        :return:
+    def deal_path(cls, data: str, replace: str = "_") -> str:
+        """处理（替换）路径中命名中的不规范字符。
+        
+        Args:
+            data: 原始路径字符串
+            replace: 替换字符
+            
+        Returns:
+            处理后的路径字符串
         """
         if data and not cls.is_windows():
             # '|', '"', ':', '?', '*', '<', '>'   '\' '/'
-            for i in ('|', '"', '：', '?', '*', '<', '>'):
-                data = data.replace(i, replace)
+            for char in ('|', '"', '：', '?', '*', '<', '>'):
+                data = data.replace(char, replace)
         return data
 
     @staticmethod
     @Decorate.catch()
-    def makedir(path: str, flag_file: bool = False):
-        """
-        创建单层目录, 或剔除文件名单层目录
-        :param path:
-        :param flag_file:
-        :return:
+    def makedir(path: str, flag_file: bool = False) -> bool:
+        """创建单层目录，或剔除文件名创建单层目录。
+        
+        Args:
+            path: 目录路径或文件路径
+            flag_file: 是否包含文件名（如果为True，会剔除文件名部分）
+            
+        Returns:
+            创建成功返回True
         """
         if flag_file is True:
             # 切割路径和文件名
-            # filepath, filename = os.path.split(path)
             path = os.path.split(path)[0]
-        # if os.path.exists(path) and os.path.isdir(path):
+        
         if not Tools.check_empty(path):
-            # path = Tools.deal_path(path)
             if Tools.isdir(path):
                 print("目录已存在, 无需创建: %s" % path)
             else:
@@ -1228,31 +1331,34 @@ class Tools:
 
     @staticmethod
     @Decorate.catch(err_level="warn")
-    def makedirs(path: str, flag_file: bool = False):
-        """
-        递归创建目录, 或剔除文件名创建目录
-        :param path:
-        :param flag_file: 是否包含文件路径文件
-        :return: bool
+    def makedirs(path: str, flag_file: bool = False) -> bool:
+        """递归创建目录，或剔除文件名创建目录。
+        
+        Args:
+            path: 目录路径或文件路径
+            flag_file: 是否包含文件路径文件
+            
+        Returns:
+            创建成功返回True
         """
         if flag_file is True:
             # 切割路径和文件名
-            # filepath, filename = os.path.split(path)
             path = os.path.split(path)[0]
             if path == "":
-                # print("not need create, parent path is empty: %s" % path)
                 return True
-            # os.makedirs(os.path.dirname(path), exist_ok=True)
 
         os.makedirs(path, exist_ok=True)
         return True
 
     @staticmethod
     def get_file_path(file_name: str) -> Optional[str]:
-        """
-        获取文件目录
-        :param file_name: 源文件
-        :return:
+        """获取文件目录。
+        
+        Args:
+            file_name: 源文件路径
+            
+        Returns:
+            文件所在目录路径，如果输入为空返回None
         """
         if file_name:
             return os.path.split(file_name)[0]
@@ -1260,35 +1366,43 @@ class Tools:
 
     @staticmethod
     def get_file_name(file_name: str) -> Optional[str]:
-        """
-        获取文件名
-        :param file_name: 源文件
-        :return:
+        """获取文件名。
+        
+        Args:
+            file_name: 源文件路径
+            
+        Returns:
+            文件名，如果输入为空返回None
         """
         if file_name:
-            # return os.path.basename(file_name)
             return os.path.split(file_name)[-1]
         return None
 
     @staticmethod
     def get_abspath(path_src: str) -> Optional[str]:
-        """
-        获取文件/目录的绝对路径
-        :param path_src: 文件/目录路径
-        :return:
+        """获取文件/目录的绝对路径。
+        
+        Args:
+            path_src: 文件/目录路径
+            
+        Returns:
+            绝对路径，如果输入为空返回原值
         """
         if not path_src:
             return path_src
         return os.path.abspath(path_src)
 
     @classmethod
-    def unzip_file(cls, filename: str, unzip_path: str = None, file_suffix: str = None) -> bool:
-        """
-        解压文件
-        :param filename: 带解压文件
-        :param unzip_path: 指定解压路径
-        :param file_suffix: 指定文件后缀类型
-        :return:
+    def unzip_file(cls, filename: str, unzip_path: Optional[str] = None, file_suffix: Optional[str] = None) -> bool:
+        """解压文件。
+        
+        Args:
+            filename: 待解压文件路径
+            unzip_path: 指定解压路径，默认为None
+            file_suffix: 指定文件后缀类型，默认为None
+            
+        Returns:
+            解压成功返回True，否则返回False
         """
         # 结果
         ret = False
@@ -1399,29 +1513,38 @@ class Tools:
     '''
 
     @staticmethod
-    def get_create_time(file) -> float:
-        """
-        获取文件或目录创建时间
-        :param file:
-        :return:
+    def get_create_time(file: str) -> float:
+        """获取文件或目录创建时间。
+        
+        Args:
+            file: 文件或目录路径
+            
+        Returns:
+            创建时间戳
         """
         return os.path.getctime(file)
 
     @staticmethod
-    def get_modify_time(file) -> float:
-        """
-        获取文件或目录的最后修改时间
-        :param file:
-        :return:
+    def get_modify_time(file: str) -> float:
+        """获取文件或目录的最后修改时间。
+        
+        Args:
+            file: 文件或目录路径
+            
+        Returns:
+            最后修改时间戳
         """
         return os.path.getmtime(file)
 
     @staticmethod
-    def get_access_time(file) -> float:
-        """
-        获取文件访问时间
-        :param file:
-        :return:
+    def get_access_time(file: str) -> float:
+        """获取文件访问时间。
+        
+        Args:
+            file: 文件路径
+            
+        Returns:
+            最后访问时间戳
         """
         return os.path.getatime(file)
 
@@ -1440,24 +1563,29 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def del_file(file: str):
-        """
-        删除文件
-        :param file:
-        :return:
+    def del_file(file: str) -> bool:
+        """删除文件。
+        
+        Args:
+            file: 文件路径
+            
+        Returns:
+            删除成功返回True
         """
         if os.path.exists(file):
-            # print("删除文件：%s" % file)
             os.remove(file)
         return True
 
     @staticmethod
-    def del_dirs(path: str, del_tree: bool = True):
-        """
-        推荐，删除整个目录(包含文件)，推荐按删除方式
-        :param path: 文件夹路径
-        :param del_tree: 是否删除真个目录数
-        :return:
+    def del_dirs(path: str, del_tree: bool = True) -> bool:
+        """推荐：删除整个目录（包含文件）。
+        
+        Args:
+            path: 文件夹路径
+            del_tree: 是否删除整个目录树
+            
+        Returns:
+            删除成功返回True
         """
         if del_tree:
             return Tools.del_dirs_tree(path)
@@ -1466,11 +1594,14 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def del_dirs_tree(path: str):
-        """
-        推荐，强制删除目录树
-        :param path:
-        :return:bool
+    def del_dirs_tree(path: str) -> bool:
+        """推荐：强制删除目录树。
+        
+        Args:
+            path: 目录路径
+            
+        Returns:
+            删除成功返回True
         """
         if os.path.exists(path):
             import shutil
@@ -1479,11 +1610,16 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def del_dirs_empty(path: str):
-        """
-        递归删除空目录。如果子目录成功被删除，则将会成功删除父目录，子目录没成功删除，将抛异常。
-        :param path:
-        :return:bool
+    def del_dirs_empty(path: str) -> bool:
+        """递归删除空目录。
+        
+        注意：如果子目录成功被删除，则将会成功删除父目录，子目录没成功删除，将抛异常。
+        
+        Args:
+            path: 目录路径
+            
+        Returns:
+            删除成功返回True
         """
         if Tools.exists(path):
             os.removedirs(path)
@@ -1491,11 +1627,14 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def del_dirone_empty(path: str):
-        """
-        删除单个空目录
-        :param path:
-        :return:bool
+    def del_dirone_empty(path: str) -> bool:
+        """删除单个空目录。
+        
+        Args:
+            path: 目录路径
+            
+        Returns:
+            删除成功返回True
         """
         if Tools.exists(path):
             os.rmdir(path)
@@ -1504,26 +1643,33 @@ class Tools:
     @staticmethod
     # @Decorate.time_run
     @Decorate.catch()
-    def rename(name: str, new_name: str):
-        """
-        重命名，经测试使用shutil模块的移动函数重命名比os模块单纯的移动效率更高
-        :param name: 源目标
-        :param new_name: 移动地址
-        :return:bool
+    def rename(name: str, new_name: str) -> bool:
+        """重命名文件或目录。
+        
+        注意：经测试使用shutil模块的移动函数重命名比os模块单纯的移动效率更高
+        
+        Args:
+            name: 源目标路径
+            new_name: 新名称路径
+            
+        Returns:
+            重命名成功返回True
         """
         return Tools.move(name, new_name)
 
     @staticmethod
     # @Decorate.time_run
     @Decorate.catch()
-    def rename_os(name: str, new_name: str):
+    def rename_os(name: str, new_name: str) -> bool:
+        """使用os模块重命名目录（文件夹、文件）。
+        
+        Args:
+            name: 源目标路径
+            new_name: 新名称路径
+            
+        Returns:
+            重命名成功返回True，失败返回False
         """
-        重命名目录（文件夹、文件）
-        :param name: 源目标
-        :param new_name: 修改名
-        :return:bool
-        """
-        # os.rename(name, new_name)
         if Tools.exists(name):
             os.rename(name, new_name)
             return True
@@ -1534,13 +1680,16 @@ class Tools:
     @Decorate.catch()
     def move(name: str, new_name: str, flag_cover: bool = True,
              flag_mk_parent: bool = False) -> bool:
-        """
-        移动目录，同时有重命名功能
-        :param name: 源目标
-        :param new_name: 移动地址
-        :param flag_cover: 是否覆盖, 默认True覆盖
-        :param flag_mk_parent: 是否创建目标路径的父级目录, 默认False不创建
-        :return: bool
+        """移动目录，同时有重命名功能。
+        
+        Args:
+            name: 源目标路径
+            new_name: 移动地址
+            flag_cover: 是否覆盖（默认True覆盖）
+            flag_mk_parent: 是否创建目标路径的父级目录（默认False不创建）
+            
+        Returns:
+            移动成功返回True，失败返回False
         """
         if flag_cover is False:
             if Tools.exists(new_name):
@@ -1558,11 +1707,14 @@ class Tools:
     @staticmethod
     @Decorate.catch()
     def copy_file(source: str, dst: str) -> bool:
-        """
-        复制文件
-        :param source: 来源文件
-        :param dst: 目标文件
-        :return:
+        """复制文件。
+        
+        Args:
+            source: 来源文件路径
+            dst: 目标文件路径
+            
+        Returns:
+            复制成功返回True，失败返回False
         """
         if Tools.isfile(source):
             # 创建上级目录
@@ -1575,31 +1727,39 @@ class Tools:
     @staticmethod
     # @Decorate.time_run
     @Decorate.catch()
-    def copy_dirtree(path: str, copy_path: str):
-        """
-        将源文件的内容复制到目标文件或目录
-        :param path:
-        :param copy_path:
-        :return:
+    def copy_dirtree(path: str, copy_path: str) -> bool:
+        """将源目录的内容复制到目标目录。
+        
+        注意：使用copytree时，需要确保src存在而dst不存在。即使顶层目录不包含任何内容，copytree也不会工作
+        
+        Args:
+            path: 源目录路径
+            copy_path: 目标目录路径
+            
+        Returns:
+            复制成功返回True，失败返回False
         """
         if Tools.exists(path):
             import shutil
             if Tools.exists(copy_path):
                 shutil.rmtree(copy_path)
-            # 使用copytree时，需要确保src存在而dst不存在。即使顶层目录不包含任何内容，copytree也不会工作
             shutil.copytree(path, copy_path)
             return True
         return False
 
     @staticmethod
     @Decorate.catch()
-    def copy_dir(path: str, copy_path: str):
-        """
-        将源文件的内容复制到目标文件或目录
-        注：使用的前提是必须要有 os.chdir(你要处理的路径)
-        :param path:
-        :param copy_path:
-        :return:
+    def copy_dir(path: str, copy_path: str) -> bool:
+        """将源文件的内容复制到目标文件或目录。
+        
+        注意：使用的前提是必须要有 os.chdir(你要处理的路径)
+        
+        Args:
+            path: 源路径
+            copy_path: 目标路径
+            
+        Returns:
+            复制成功返回True，失败返回False
         """
         if Tools.exists(path):
             import shutil
@@ -1609,13 +1769,16 @@ class Tools:
 
     @classmethod
     # @Decorate.catch()
-    def compress_archive(cls, source: str, output_archive: str, fmt: str = "zip"):
-        """
-        压缩指定文件夹中的文件为归档。
-        :param source: 要压缩的文件夹路径。
-        :param output_archive: 输出归档文件的路径。
-        :param fmt: 压缩格式，默认为 "zip"。可选值包括 "zip", "tar", "gztar", "bztar", "xztar"
-        :return:
+    def compress_archive(cls, source: str, output_archive: str, fmt: str = "zip") -> bool:
+        """压缩指定文件夹中的文件为归档。
+        
+        Args:
+            source: 要压缩的文件夹路径
+            output_archive: 输出归档文件的路径
+            fmt: 压缩格式，默认为"zip"（可选值包括"zip", "tar", "gztar", "bztar", "xztar"）
+            
+        Returns:
+            压缩成功返回True，失败返回False
         """
         if not cls.exists(source):
             logger.warning("Warn, 未找到目录/文件: %s" % source)
@@ -1624,19 +1787,21 @@ class Tools:
         from shutil import make_archive
         try:
             make_archive(output_archive, fmt, source)
-            # print(f"成功压缩文件夹 {source_folder} 为 {output_archive}.{format}")
         except Exception as e:
             logger.exception(f"压缩文件夹失败：{e}")
             return False
         return True
 
     @classmethod
-    def extract_archive(cls, archive: str, output: str):
-        """
-        解压归档文件到指定文件夹。
-        :param archive: 归档文件的路径。
-        :param output: 解压文件的目标文件夹路径。
-        :return:
+    def extract_archive(cls, archive: str, output: str) -> bool:
+        """解压归档文件到指定文件夹。
+        
+        Args:
+            archive: 归档文件的路径
+            output: 解压文件的目标文件夹路径
+            
+        Returns:
+            解压成功返回True，失败返回False
         """
         if not cls.isfile(archive):
             logger.warning("Warn, 未找到文件: %s" % archive)
@@ -1645,7 +1810,6 @@ class Tools:
         from shutil import unpack_archive
         try:
             unpack_archive(archive, output)
-            # print(f"成功解压 {archive_file} 到 {output_folder}")
         except Exception as e:
             logger.exception(f"解压文件失败：{e}")
             return False
@@ -1654,10 +1818,11 @@ class Tools:
     """ 七、一些特殊功能: python语法相关，如获取类属性、类函数等 """
 
     @staticmethod
-    def get_func_name():
-        """
-        获取正在调用此函数(或方法)的名称
-        :return:
+    def get_func_name() -> str:
+        """获取正在调用此函数(或方法)的名称。
+        
+        Returns:
+            当前函数的名称
         """
         import inspect
         result_name = inspect.stack()[1][3]
@@ -1666,55 +1831,64 @@ class Tools:
 
     @staticmethod
     @Decorate.catch(list())
-    def get_cls_all(obj):
-        """
-        获取类或实例的所有属性（函数和变量），以下划线开头的特殊函数和变量除外
-        :param obj: 类或实例对象
-        :return: list, 每个元素为元组, (函数名或变量名, 具体函数或变量值)
+    def get_cls_all(obj) -> List[Tuple[str, Any]]:
+        """获取类或实例的所有属性（函数和变量），以下划线开头的特殊函数和变量除外。
+        
+        Args:
+            obj: 类或实例对象
+            
+        Returns:
+            每个元素为元组的列表，(函数名或变量名, 具体函数或变量值)
         """
         return [(name, getattr(obj, name)) for name in dir(obj) if not name.startswith("_")]
 
     @staticmethod
-    def get_cls_fuclist(obj):
-        """
-        获取类或实例的可调用函数
-        :param obj: 类或实例对象
-        :return: list, 每个元素为元组
+    def get_cls_fuclist(obj) -> List[Tuple[str, Any]]:
+        """获取类或实例的可调用函数。
+        
+        Args:
+            obj: 类或实例对象
+            
+        Returns:
+            每个元素为元组的列表，包含函数名和函数对象
         """
         temp = []
         for name, func in Tools.get_cls_all(obj):
             if callable(func):
-                # print(name, func)
                 temp.append((name, func))
         return temp
 
     @staticmethod
-    def get_cls_fucdict(obj):
-        """
-        获取类或实例的可调用函数
-        :param obj: 类或实例对象
-        :return: dict
+    def get_cls_fucdict(obj) -> Dict[str, Any]:
+        """获取类或实例的可调用函数。
+        
+        Args:
+            obj: 类或实例对象
+            
+        Returns:
+            包含所有可调用函数的字典
         """
         temp = {}
         for name, func in Tools.get_cls_all(obj):
             # 可调用对象
             if callable(func):
-                # print(name, func)
                 temp[name] = func
         return temp
 
     @staticmethod
-    def get_cls_attrdict(obj):
-        """
-        获取类或实例的属性
-        :param obj: 类或实例对象
-        :return: dict
+    def get_cls_attrdict(obj) -> Dict[str, Any]:
+        """获取类或实例的属性。
+        
+        Args:
+            obj: 类或实例对象
+            
+        Returns:
+            包含所有非可调用属性的字典
         """
         temp = {}
         for name, func in Tools.get_cls_all(obj):
-            # 不可可调用对象
+            # 不可调用对象
             if not callable(func):
-                # print(name, func)
                 temp[name] = func
         return temp
 
@@ -1724,17 +1898,21 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def execute_paramlist_run(list_params: list):
-        """
-        执行系统命令，列表形式参数组装命令，返回输出结果
+    def execute_paramlist_run(list_params: List[str]) -> bytes:
+        """执行系统命令，列表形式参数组装命令，返回输出结果。
+        
         例：获取视频时长(调用工具ffprobe)
             result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
                                  "format=duration", "-of",
                                  "default=noprint_wrappers=1:nokey=1", filename],
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             media_time = float(result.stdout)
-        :param list_params: list 参数列表
-        :return: str 输出值
+            
+        Args:
+            list_params: 参数列表
+            
+        Returns:
+            命令执行的输出结果
         """
         import subprocess
         # 参数stdin, stdout, stderr分别表示程序的标准输入、输出、错误句柄。他们可以是PIPE、文件描述符或文件对象，
@@ -1744,23 +1922,28 @@ class Tools:
 
     @staticmethod
     @Decorate.catch()
-    def execute_command_system(command: str):
-        """
-        简单粗暴的执行系统(cmd)命令，返回结果为0表示执行成功, 默认打印控制台内容
-            返回命令执行结果的返回值，system()函数在执行过程中进行了以下三步操作：
-                1.fork一个子进程；
-                2.在子进程中调用exec函数去执行命令；
-                3.在父进程中调用wait（阻塞）去等待子进程结束。
-                对于fork失败，system()函数返回-1。
-                注：有些用户使用该函数经常会莫名其妙地出现错误，但是直接执行命令并没有问题。
-        :param command: str
-        :return: bool
+    def execute_command_system(command: str) -> bool:
+        """简单粗暴的执行系统(cmd)命令，返回结果为0表示执行成功, 默认打印控制台内容。
+        
+        返回命令执行结果的返回值，system()函数在执行过程中进行了以下三步操作：
+            1.fork一个子进程；
+            2.在子进程中调用exec函数去执行命令；
+            3.在父进程中调用wait（阻塞）去等待子进程结束。
+            对于fork失败，system()函数返回-1。
+            注：有些用户使用该函数经常会莫名其妙地出现错误，但是直接执行命令并没有问题。
+            
         更多：使用system执行多条命令
             为了保证system执行多条命令可以成功，多条命令需要在同一个子进程中运行；
             import os
             os.system('cd /usr/local && mkdir aaa.txt')
             # 或者
             os.system('cd /usr/local ; mkdir aaa.txt')
+            
+        Args:
+            command: 要执行的系统命令
+            
+        Returns:
+            执行成功返回True，失败返回False
         """
         result_os = os.system(command)
         # 或使用 result_os = subprocess.call(command)
@@ -1771,84 +1954,89 @@ class Tools:
 
     @staticmethod
     @Decorate.catch(None)
-    def execute_command_popen(command: str, flag_os=True):
-        """
-        执行系统命令, 返回控制台输出
-            popen() 创建一个管道，通过fork一个子进程,然后该子进程执行命令。返回值在标准IO流中，该管道用于父子进程间通信。
-            父进程要么从管道读信息，要么向管道写信息，至于是读还是写取决于父进程调用popen时传递的参数（w或r）。
+    def execute_command_popen(command: str, flag_os: bool = True) -> Optional[str]:
+        """执行系统命令, 返回控制台输出。
+        
+        popen() 创建一个管道，通过fork一个子进程,然后该子进程执行命令。返回值在标准IO流中，该管道用于父子进程间通信。
+        父进程要么从管道读信息，要么向管道写信息，至于是读还是写取决于父进程调用popen时传递的参数（w或r）。
 
-            注：Popen非常强大，支持多种参数和模式。使用前需要from subprocess import Popen, PIPE。但是Popen函数有一个缺陷，
-                就是它是一个阻塞的方法。如果运行cmd时产生的内容非常多，函数非常容易阻塞住。解决办法是不使用wait()方法，
-                但是也不能获得执行的返回值了。
-            更多： 使用commands.getstatusoutput方法（commands是提供linux系统环境下支持使用shell命令的一个模块）
-                这个方法也不会打印出cmd在linux上执行的信息。这个方法唯一的优点是，它不是一个阻塞的方法。
-                即没有Popen函数阻塞的问题。
-                例如：
-                import commands
-                status, output = commands.getstatusoutput("ls")
-                # 还有只获得output和status的方法：
-                # commands.getoutput("ls")
-                # commands.getstatus("ls")
-        :param command: str 命令
-        :param flag_os: bool 是否使用os模块，否则使用subprocess模块
-        :return: str
+        注：Popen非常强大，支持多种参数和模式。使用前需要from subprocess import Popen, PIPE。但是Popen函数有一个缺陷，
+            就是它是一个阻塞的方法。如果运行cmd时产生的内容非常多，函数非常容易阻塞住。解决办法是不使用wait()方法，
+            但是也不能获得执行的返回值了。
+        更多： 使用commands.getstatusoutput方法（commands是提供linux系统环境下支持使用shell命令的一个模块）
+            这个方法也不会打印出cmd在linux上执行的信息。这个方法唯一的优点是，它不是一个阻塞的方法。
+            即没有Popen函数阻塞的问题。
+            例如：
+            import commands
+            status, output = commands.getstatusoutput("ls")
+            # 还有只获得output和status的方法：
+            # commands.getoutput("ls")
+            # commands.getstatus("ls")
+            
+        Args:
+            command: 要执行的命令
+            flag_os: 是否使用os模块，否则使用subprocess模块
+            
+        Returns:
+            命令执行的输出结果，失败时返回None
         """
-        # result_popen = None
         # popen返回文件对象，跟open操作一样
         if flag_os is True:
             with os.popen(command, "r") as f:
                 result_popen = f.read()  # 读
                 print("success, execute command of os: %s" % command)
         else:
-            ''' 使用管道输出 '''
+            # 使用管道输出
             import subprocess
             with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE) as f:
-                # 读取输出
-                # result_popen = f.stdout.readlines()
-                # result_popen = f.stdout.readline()
                 result_data = f.stdout.read()
                 try:
                     result_popen = result_data.decode('gbk').strip('\r\n')
                 except Exception as e:
                     result_popen = result_data.decode('utf-8').strip('\r\n')
                     print("%s, result: %s" % (e, result_popen))
-                # pipe.read()
                 print("success, execute command of subprocess: %s" % command)
         return result_popen
 
     @staticmethod
-    def execute_command(command: str):
-        """
-        执行系统命令
-        :param command: str 命令
-        :return: bool 执行结果
+    def execute_command(command: str) -> Optional[str]:
+        """执行系统命令。
+        
+        Args:
+            command: 要执行的命令
+            
+        Returns:
+            命令执行的输出结果
         """
         # 执行系统命令，不打印
         return Tools.execute_command_popen(command)
 
     @staticmethod
-    def get_host_name():
-        """
-        查询本机电脑名
-        :return:
+    def get_host_name() -> str:
+        """查询本机电脑名。
+        
+        Returns:
+            本机电脑名
         """
         import socket
         # 获取本机电脑名
         return socket.getfqdn(socket.gethostname())
 
     @staticmethod
-    def get_host():
-        """
-        查询本机ip地址
-        :return:
+    def get_host() -> str:
+        """查询本机ip地址。
+        
+        Returns:
+            本机IP地址
         """
         return Tools.get_host_dns()
 
     @staticmethod
-    def get_host_win():
-        """
-        查询本机ip地址(Linux中国报错)
-        :return:
+    def get_host_win() -> str:
+        """查询本机ip地址(Linux中可能报错)。
+        
+        Returns:
+            本机IP地址
         """
         import socket
         host = socket.gethostbyname(Tools.get_host_name())
@@ -1857,51 +2045,44 @@ class Tools:
 
     @staticmethod
     @Decorate.catch("")
-    def get_host_dns(dns: str = "8.8.8.8", port: int = 80):
-        """
-        查询本机ip地址
-        :return:
+    def get_host_dns(dns: str = "8.8.8.8", port: int = 80) -> str:
+        """查询本机ip地址。
+        
+        Args:
+            dns: DNS服务器地址，默认为"8.8.8.8"
+            port: 端口号，默认为80
+            
+        Returns:
+            本机IP地址，失败时返回空字符串
         """
         import socket
-        # # 获取本机电脑名
-        # name = socket.getfqdn(socket.gethostname())
-        # # 获取本机ip
-        # addr = socket.gethostbyname(myname)
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.connect((dns, port))
             ip = s.getsockname()[0]
-            # logger.info("本机IP: %s" % ip)
             print("本机IP: %s" % ip)
             return ip
 
-    '''
-    @staticmethod
-    @Decorate.catch()
-    def execute_linux_statusoutput(command):
-        """
-        执行linux系统命令
-        :param command:
-        :return:
-        """
-        import commands
-        # status, output = commands.getstatusoutput("ls")
-        return commands.getstatusoutput(command)
-    '''
+
 
     @staticmethod
     def read_config_local(name_config: str, encoding: str = "utf-8-sig",
                           flag_base_conf: bool = True, **kwargs) \
             -> Tuple[Optional[dict], Optional[dict]]:
-        """
-        读取本地配置文件，获取所有配置参数，字典参数
-        注：所有配置默认为 字符串类型，获取后需自行转换类型
+        """读取本地配置文件，获取所有配置参数。
+        
+        注：所有配置默认为字符串类型，获取后需自行转换类型
         参考: 利用configparser模块读写配置文件
              https://www.cnblogs.com/imyalost/p/8857896.html
-        :param name_config: 文件路径
-        :param encoding: 编码格式
-        :param flag_base_conf: 是否使用基础的INI文件读取类RawConfigParser，
-                                否则使用ConfigParser (含有%时会抛出异常)
-        :return: dict, dict  分别为：按划分存储配置参数, 按键值存储所有配置参数
+        
+        Args:
+            name_config: 配置文件路径
+            encoding: 编码格式
+            flag_base_conf: 是否使用基础的INI文件读取类RawConfigParser，
+                           否则使用ConfigParser (含有%时会抛出异常)
+            **kwargs: 其他参数
+            
+        Returns:
+            元组，包含两个字典：按划分存储配置参数, 按键值存储所有配置参数
         """
         # logger.debug("read local config file: %s" % name_config)
         # print("read local config file: %s" % name_config)
@@ -1955,22 +2136,29 @@ class Tools:
 
     @staticmethod
     def load_config_ini(file_conf: str, **kwargs) -> Optional[Dict[str, str]]:
-        """
-        加载本地配置（ini）
-        :param file_conf:
-        :return:
+        """加载本地INI配置文件。
+        
+        Args:
+            file_conf: 配置文件路径
+            **kwargs: 其他参数
+            
+        Returns:
+            配置参数字典，失败时返回None
         """
         return Tools.read_config_local(file_conf, **kwargs)[1]
 
     @staticmethod
     def exec_func_old(module_name: str, func_name: str, *args, **kwargs):
-        """
-        执行（字符串）函数，并限制执行时间
-        :param module_name: 模块名
-        :param func_name: 函数名
-        :param args: 元组，参数列表
-        :param kwargs: 字典，参数列表
-        :return: object
+        """执行（字符串）函数，并限制执行时间。
+        
+        Args:
+            module_name: 模块名
+            func_name: 函数名
+            *args: 位置参数列表
+            **kwargs: 关键字参数字典
+            
+        Returns:
+            函数执行结果
         """
         if module_name:
             exec("import %s" % module_name)
@@ -1978,13 +2166,16 @@ class Tools:
 
     @staticmethod
     def exec_func(module_name: Union[str, object], func_name: str, *args, **kwargs):
-        """
-        通过字符串执行类的函数
-        :param module_name: 模块或模块名
-        :param func_name: 函数名
-        :param args: 元组，参数列表
-        :param kwargs: 字典，参数列表
-        :return: object
+        """通过字符串执行类的函数。
+        
+        Args:
+            module_name: 模块或模块名
+            func_name: 函数名
+            *args: 位置参数列表
+            **kwargs: 关键字参数字典
+            
+        Returns:
+            函数执行结果
         """
         from importlib import import_module
         # 'a.b' 相当于：from a import b
@@ -1995,10 +2186,10 @@ class Tools:
     @staticmethod
     @Decorate.catch()
     def reload_module(module: Union[str, object]):
-        """
-        重新加载导入的模块
-        :param module: 模块或模块名
-        :return:
+        """重新加载导入的模块。
+        
+        Args:
+            module: 模块或模块名
         """
         from importlib import import_module, reload
         if isinstance(module, str):
@@ -2008,16 +2199,17 @@ class Tools:
 
     @staticmethod
     def exit(int_flag: int = 0, time_delay: int = 3):
-        """
-        退出程序
+        """退出程序。
+        
         注： exit() vs sys.exit()
                 exit()会直接将python程序终止，之后的所有代码都不会继续执行。
                 sys.exit()会引发一个异常：SystemExit，如果这个异常没有被捕获，
                 那么python解释器将会退出。如果有捕获此异常的代码，那么这些代码还是会执行。
                 捕获这个异常可以做一些额外的清理工作。0为正常退出，其他数值（1-127）为不正常，可抛异常事件供捕获。
-        :param int_flag: 0为正常退出，其他数值（1-127）为不正常，可抛异常事件供捕获
-        :param time_delay: 延迟退出，单位秒
-        :return:
+        
+        Args:
+            int_flag: 0为正常退出，其他数值（1-127）为不正常，可抛异常事件供捕获
+            time_delay: 延迟退出，单位秒
         """
         print("警告：程序即将退出 exit: %s！！！！！！！！" % int_flag)
         logger.error("警告：程序即将退出 exit: %s！！！！！！！！" % int_flag)
@@ -2026,12 +2218,13 @@ class Tools:
         getattr(os, "_exit")(int_flag)
 
     @classmethod
-    def kill(cls, pid=os.getpid()):
-        """
-        kill进程
-        默认kill本进程
-        :param pid: 进程id
-        :return:
+    def kill(cls, pid: int = os.getpid()):
+        """终止进程。
+        
+        默认终止本进程
+        
+        Args:
+            pid: 进程ID
         """
         if cls.is_windows():
             cmd = "taskkill / PID %s / F" % pid
@@ -2040,11 +2233,14 @@ class Tools:
         Tools.execute_command(cmd)
 
     @classmethod
-    def run_in_background(cls, output='/dev/null'):
-        """
-        程序后台运行
-        :param output: 重定向输出
-        :return:
+    def run_in_background(cls, output: str = '/dev/null') -> bool:
+        """程序后台运行。
+        
+        Args:
+            output: 重定向输出路径
+            
+        Returns:
+            成功返回True，否则返回False
         """
         if cls.is_windows():
             logger.warning("警告, 转入后台失败, 不支持当前类型系统: %s" % cls.get_system_type())
@@ -2083,8 +2279,17 @@ class Tools:
     @staticmethod
     def parse_args(args: Union[list, tuple] = None, start: str = "--",
                    seq: str = "=") -> Dict[str, str]:
-        """
-        解析命令行参数，示例：python xxx.py --log=file
+        """解析命令行参数。
+        
+        示例：python xxx.py --log=file
+        
+        Args:
+            args: 参数列表，默认为None时使用sys.argv
+            start: 参数前缀，默认为"--"
+            seq: 参数分隔符，默认为"="
+            
+        Returns:
+            解析后的参数字典
         """
         # 输入参数
         dict_arg = dict()
@@ -2101,13 +2306,16 @@ class Tools:
         return dict_arg
 
     @staticmethod
-    def generate_get_set_str(class_obj, style_java: bool = False, return_type: bool = True):
-        """
-        根据类的属性生成get、set字符串
-        :param class_obj: 类对象
-        :param style_java: java风格，python下划线，java首字母大写
-        :param return_type: 返回值类型
-        :return:
+    def generate_get_set_str(class_obj, style_java: bool = False, return_type: bool = True) -> str:
+        """根据类的属性生成get、set方法字符串。
+        
+        Args:
+            class_obj: 类对象
+            style_java: 是否使用Java风格（驼峰命名），默认为False（Python下划线风格）
+            return_type: 是否包含返回值类型注解，默认为True
+            
+        Returns:
+            生成的get、set方法字符串
         """
         # 结果
         result = ""
@@ -2137,9 +2345,9 @@ class Tools:
             if return_type and type_key != "NoneType":
                 # set
                 result += "\tdef %s%s(self, %s: %s):\n" \
-                          "\t\t\"\"\"\n\t\tSet attribute %s \n" \
-                          "\t\t:param %s: ready to set params\n" \
-                          "\t\t:return: \n\t\t\"\"\"\n" \
+                          "\t\t\"\"\"Set attribute %s.\n\n" \
+                          "\t\tArgs:\n" \
+                          "\t\t\t%s: Value to set\n\t\t\"\"\"\n" \
                           % (set_str, key_upper, key, type_key, key, key)
                 # (定制化) 转换格式
                 # result += "\t\tself.set_params(\"%s\", %s, %s)\n" % (key, key, type_key)
@@ -2148,22 +2356,26 @@ class Tools:
 
                 # get
                 result += "\tdef %s%s(self) -> %s:\n" \
-                          "\t\t\"\"\"\n\t\tGet attribute %s \n\t\t:return: %s\n\t\t\"\"\"\n" \
-                          % (get_str, key_upper, type_key, key, type_key)
+                          "\t\t\"\"\"Get attribute %s.\n\n" \
+                          "\t\tReturns:\n" \
+                          "\t\t\t%s: The %s value\n\t\t\"\"\"\n" \
+                          % (get_str, key_upper, type_key, key, type_key, key)
                 result += "\t\treturn self.%s\n\n" % key
             else:
                 # set
                 result += "\tdef %s%s(self, %s):\n" \
-                          "\t\t\"\"\"\n\t\tSet attribute %s \n" \
-                          "\t\t:param %s: ready to set params\n" \
-                          "\t\t:return: \n\t\t\"\"\"\n" \
+                          "\t\t\"\"\"Set attribute %s.\n\n" \
+                          "\t\tArgs:\n" \
+                          "\t\t\t%s: Value to set\n\t\t\"\"\"\n" \
                           % (set_str, key_upper, key, key, key)
                 result += "\t\tself.%s = %s\n\n" % (key, key)
 
                 # get
                 result += "\tdef %s%s(self):\n" \
-                          "\t\t\"\"\"\n\tGet attribute %s \n\t\t:return: \n\t\t\"\"\"\n" \
-                          % (get_str, key_upper, key)
+                          "\t\t\"\"\"Get attribute %s.\n\n" \
+                          "\t\tReturns:\n" \
+                          "\t\t\tThe %s value\n\t\t\"\"\"\n" \
+                          % (get_str, key_upper, key, key)
                 result += "\t\treturn self.%s\n\n" % key
 
             # print("def set_" + k + "(self," + k + "):")
@@ -2187,12 +2399,15 @@ class Tools:
     # TODO 加解密相关 md5/sha1/base64
 
     @staticmethod
-    def encode_sha1(data: Union[str, bytes], encoding="utf-8") -> str:
-        """
-        sha1编码
-        :param data: 待编码数据
-        :param encoding: 编码格式
-        :return:
+    def encode_sha1(data: Union[str, bytes], encoding: str = "utf-8") -> str:
+        """SHA1编码。
+        
+        Args:
+            data: 待编码数据
+            encoding: 编码格式
+            
+        Returns:
+            SHA1编码后的十六进制字符串
         """
         from hashlib import sha1
         # print("\t 进行sha1编码: %s" % str(data[:80]))
@@ -2202,12 +2417,15 @@ class Tools:
             return sha1(bytes(data, encoding=encoding)).hexdigest()
 
     @staticmethod
-    def encode_md5(data: Union[str, bytes], encoding="utf-8") -> str:
-        """
-        MD5编码
-        :param data: 待编码数据
-        :param encoding: 编码格式
-        :return:
+    def encode_md5(data: Union[str, bytes], encoding: str = "utf-8") -> str:
+        """MD5编码。
+        
+        Args:
+            data: 待编码数据
+            encoding: 编码格式
+            
+        Returns:
+            MD5编码后的十六进制字符串
         """
         from hashlib import md5
         # print("\t 进行md5编码: %s" % str(data[:80]))
@@ -2215,15 +2433,17 @@ class Tools:
             return md5(data).hexdigest()
         else:
             return md5(data.encode(encoding=encoding)).hexdigest()
-        # return md5(bytes(data, encoding="utf-8")).hexdigest()
 
     @staticmethod
     def encode_md5_file(filename: str, size: int = 2048) -> str:
-        """
-        计算文件MD5编码
-        :param filename: 文件路径
-        :param size: 读取大小，-1则读取所有
-        :return:
+        """计算文件MD5编码。
+        
+        Args:
+            filename: 文件路径
+            size: 读取大小，-1则读取所有
+            
+        Returns:
+            文件MD5编码后的十六进制字符串
         """
         from hashlib import md5
         # 创建md5对象
@@ -2241,11 +2461,14 @@ class Tools:
     @staticmethod
     @Decorate.catch()
     def encode_base64(data: Union[str, bytes], encoding: str = 'utf-8') -> bytes:
-        """
-        base64编码
-        :param data: 待编码数据
-        :param encoding: 编码方式
-        :return:
+        """Base64编码。
+        
+        Args:
+            data: 待编码数据
+            encoding: 编码方式
+            
+        Returns:
+            Base64编码后的字节数据
         """
         from base64 import b64encode
         # print("\t 进行base64编码: %s" % str(data[:80]))
@@ -2256,26 +2479,28 @@ class Tools:
     @staticmethod
     @Decorate.catch()
     def encode_base64_str(data: Union[str, bytes], encoding: str = 'utf-8') -> str:
-        """
-        将数据进行base64编码并返回字符串
+        """将数据进行Base64编码并返回字符串。
         
         Args:
             data: 需要编码的数据，可以是字符串或字节
             encoding: 编码方式，默认为utf-8
             
         Returns:
-            base64编码后的字符串
+            Base64编码后的字符串
         """
         return Tools.encode_base64(data, encoding=encoding).decode(encoding=encoding)
 
     @staticmethod
     @Decorate.catch()
     def decode_base64(data: str, validate: bool = False) -> bytes:
-        """
-        base64解码
-        :param data: 需要编码的数据
-        :param validate: 是否忽略错误
-        :return:
+        """Base64解码。
+        
+        Args:
+            data: 需要解码的数据
+            validate: 是否忽略错误
+            
+        Returns:
+            Base64解码后的字节数据
         """
         from base64 import b64decode
         # print("\t 进行base64解码: %s" % str(data[:80]))
@@ -2284,12 +2509,15 @@ class Tools:
     @staticmethod
     @Decorate.catch()
     def decode_base64_str(data: str, validate: bool = False, encoding: str = 'utf-8') -> str:
-        """
-        base64解码
-        :param data: 需要编码的数据
-        :param validate: 是否忽略错误
-        :param encoding: 编码方式
-        :return:
+        """Base64解码并返回字符串。
+        
+        Args:
+            data: 需要解码的数据
+            validate: 是否忽略错误
+            encoding: 编码方式
+            
+        Returns:
+            Base64解码后的字符串
         """
         from base64 import b64decode
         # print("\t 进行base64解码: %s" % str(data[:80]))
@@ -2297,50 +2525,72 @@ class Tools:
 
     @staticmethod
     def eval_sec(value):
-        """
-        eval的安全替代方案
+        """eval的安全替代方案。
+        
         注：ast.literal_eval是python针对eval方法存在的安全漏洞而提出的一种安全处理方式。
             简单点说ast模块就是帮助Python应用来处理抽象的语法解析的。而该模块下的literal_eval()函数：则会判断需
             要计算的内容计算后是不是合法的Python类型，如果是则进行运算，否则就不进行运算。
-        :param value: strings, bytes, numbers, tuples, lists, dicts,sets, booleans, and None.
-        :return:
+        
+        Args:
+            value: 支持strings, bytes, numbers, tuples, lists, dicts, sets, booleans, and None
+            
+        Returns:
+            计算结果
         """
         from ast import literal_eval
         return literal_eval(value)
 
     @classmethod
     def eval(cls, value):
+        """eval的安全替代方案。
+        
+        Args:
+            value: 支持strings, bytes, numbers, tuples, lists, dicts, sets, booleans, and None
+            
+        Returns:
+            计算结果
+        """
         return cls.eval_sec(value)
 
     """ 挂载相关 ftp/sftp/smb/nfs """
 
     @staticmethod
     def is_mount(path: str) -> bool:
-        """
-        检查路径是否已被挂载且没有取消
-        :param path:
-        :return:
+        """检查路径是否已被挂载且没有取消。
+        
+        Args:
+            path: 路径
+            
+        Returns:
+            已挂载返回True，否则返回False
         """
         return os.path.ismount(path)
 
     @staticmethod
     @Decorate.catch()
-    def umount(path):
-        """
-        卸载/解除挂载
-        :param path: 已挂载路径
-        :return:
+    def umount(path: str) -> int:
+        """卸载/解除挂载。
+        
+        Args:
+            path: 已挂载路径
+            
+        Returns:
+            系统命令执行结果
         """
         print("[unmount] 卸载/解除挂载: %s" % path)
         # 卸载/解除挂载
         return os.system("umount %s" % path)
 
     @staticmethod
-    def mount(remote: str, local_path: str):
-        """
-        远程挂载，暂支持 smb|ftp|sftp|nfs
-        :param remote: [smb|ftp|sftp|nfs]://username:password@172.168.1.209/home/
-        :return:
+    def mount(remote: str, local_path: str) -> bool:
+        """远程挂载，暂支持 smb|ftp|sftp|nfs。
+        
+        Args:
+            remote: 远程路径，格式如 [smb|ftp|sftp|nfs]://username:password@172.168.1.209/home/
+            local_path: 本地挂载路径
+            
+        Returns:
+            挂载成功返回True，否则返回False
         """
         # 结果
         ret = False
@@ -2403,121 +2653,155 @@ class Tools:
     # TODO url相关
 
     @staticmethod
-    def url_quote(url: str):
-        """
-        url编码
-        :param url:
-        :return:
+    def url_quote(url: str) -> str:
+        """URL编码。
+        
+        Args:
+            url: 需要编码的URL
+            
+        Returns:
+            编码后的URL字符串
         """
         import urllib.parse
         return urllib.parse.quote(url)
 
     @staticmethod
-    def url_unquote(url: str):
-        """
-        url解码
-        :param url:
-        :return:
+    def url_unquote(url: str) -> str:
+        """URL解码。
+        
+        Args:
+            url: 需要解码的URL
+            
+        Returns:
+            解码后的URL字符串
         """
         import urllib.parse
         return urllib.parse.unquote(url)
 
     @staticmethod
     def url_parse(url: str):
+        """解析URL。
+        
+        URL拆解结果包含以下属性：
+            - scheme (协议): https
+            - hostname (域名/主机名): hostname
+            - netloc (网络位置): www.example.com:8080
+            - path (路径): /path/to/resource
+            - params (参数): 通常为空字符串
+            - query (查询参数): param1=value1&param2=value2
+            - fragment (片段标识): section
+            - username (用户名): 通常为空字符串
+            - password (密码): 通常为空字符串
+            - port (端口号): 8080
+            
+        Args:
+            url: 要解析的链接
+            
+        Returns:
+            解析后的URL对象
         """
-        解析URL
-        :param url: 链接
-        :return:
-        """
-        ''' url拆解结果
-            print("Scheme (协议):", parsed_url.scheme)       # 输出：https
-            print("hostname (域名/主机名):", parsed_url.hostname)       # 输出：hostname
-            print("Netloc (网络位置):", parsed_url.netloc)   # 输出：www.example.com:8080
-            print("Path (路径):", parsed_url.path)           # 输出：/path/to/resource
-            print("Params (参数):", parsed_url.params)       # 输出：（空字符串，通常不会使用）
-            print("Query (查询参数):", parsed_url.query)     # 输出：param1=value1&param2=value2
-            print("Fragment (片段标识):", parsed_url.fragment)   # 输出：section
-            print("Username (用户名):", parsed_url.username)   # 输出：（空字符串，通常不会使用）
-            print("Password (密码):", parsed_url.password)   # 输出：（空字符串，通常不会使用）
-            print("Port (端口号):", parsed_url.port)         # 输出：8080
-        '''
         # 使用urlparse解析URL
         return urlparse(url)
 
     @staticmethod
-    def url_scheme(url: str):
-        """
-        url协议
-        :param url: 链接
-        :return:
+    def url_scheme(url: str) -> str:
+        """获取URL协议。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的协议部分
         """
         return urlparse(url).scheme
 
     @staticmethod
-    def url_domain(url: str):
-        """
-        url域名(主机名)
-        :param url: 链接
-        :return:
+    def url_domain(url: str) -> Optional[str]:
+        """获取URL域名(主机名)。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的域名部分，可能为None
         """
         return urlparse(url).hostname
 
     @staticmethod
-    def url_netloc(url: str):
-        """
-        url的Netloc (网络位置)，如：www.example.com:8080
-        :param url: 链接
-        :return:
+    def url_netloc(url: str) -> str:
+        """获取URL的Netloc (网络位置)，如：www.example.com:8080。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的网络位置部分
         """
         return urlparse(url).netloc
 
     @staticmethod
-    def url_root(url: str):
-        """
-        url根路径，即 协议+域名(包含主机名和端口)
-        :param url: 链接
-        :return:
+    def url_root(url: str) -> str:
+        """获取URL根路径，即 协议+域名(包含主机名和端口)。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的根路径
         """
         return urlparse(url).scheme + "://" + urlparse(url).netloc
 
     @staticmethod
-    def url_path(url: str):
-        """
-        url路径
-        :param url: 链接
-        :return:
+    def url_path(url: str) -> str:
+        """获取URL路径。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的路径部分
         """
         return urlparse(url).path
 
     @staticmethod
-    def url_port(url: str):
-        """
-        url端口号
-        :param url: 链接
-        :return:
+    def url_port(url: str) -> Optional[int]:
+        """获取URL端口号。
+        
+        Args:
+            url: 链接
+            
+        Returns:
+            URL的端口号，可能为None
         """
         return urlparse(url).port
 
     @staticmethod
     def gen_ssl_ciphers() -> str:
-        """
-        ssl密码套件
-        :return:
+        """生成SSL密码套件。
+        
+        Returns:
+            SSL密码套件字符串
         """
         return SSLFactory.gen_ciphers()
 
     @staticmethod
     def gen_ssl_context():
-        """
-        生成ssl上下文，随机生成指纹(ja3)
+        """生成SSL上下文，随机生成指纹(ja3)。
+        
         注：应对反爬，如百度安全校验
-        :return: ssl.SSLContext
+        
+        Returns:
+            SSL上下文对象
         """
-        # ssl_gen = SSLFactory()
         return SSLFactory()()
 
     @classmethod
     def gen_ssl_ja3(cls):
+        """生成SSL JA3指纹。
+        
+        Returns:
+            SSL上下文对象
+        """
         return cls.gen_ssl_context()
 
 
@@ -2539,10 +2823,11 @@ class SSLFactory:
         pass
 
     @classmethod
-    def gen_ciphers(cls):
-        """
-        生成密码套件
-        :return:
+    def gen_ciphers(cls) -> str:
+        """生成密码套件。
+        
+        Returns:
+            随机排序的密码套件字符串
         """
         random.shuffle(cls._CIPHERS)
         ciphers = ":".join(cls._CIPHERS)
@@ -2550,9 +2835,10 @@ class SSLFactory:
         return ciphers
 
     def __call__(self):
-        """
-        返回context
-        :return: ssl.SSLContext
+        """返回SSL上下文。
+        
+        Returns:
+            ssl.SSLContext: SSL上下文对象
         """
         ciphers = self.gen_ciphers()
         # print("ciphers:", ciphers)
@@ -2568,10 +2854,7 @@ class SSLFactory:
 # print('内存使用：{}MB'.format(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024))
 
 def main():
-    """
-    主函数，测试
-    :return:
-    """
+    """主函数，用于测试工具类功能。"""
     # list
     a = [{"a": 1}]
     # tuple

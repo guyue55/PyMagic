@@ -5,26 +5,26 @@
 线程安全以及自动为类方法应用装饰器等功能。
 
 类:
-    MyThread: 增强的线程类，支持返回值获取和超时控制
-    Decorate: 主要的装饰器工具类，包含各种装饰器
+    ThreadWithResult: 增强的线程类，支持返回值获取和超时控制
+    DecoratorFactory: 装饰器工厂类，提供各种实用装饰器
 
 函数:
-    print_log: 使用loguru的增强日志记录函数
-    class_func_list: 获取类方法列表，排除私有方法
+    log_with_level: 使用loguru的增强日志记录函数
+    get_public_methods: 获取类的公共方法列表
 
-示例:
+Example:
     装饰器的基本用法:
     
-    >>> from pymagic.decorator_utils import Decorate
+    >>> from pymagic.decorator_utils import DecoratorFactory
     >>> 
-    >>> @Decorate.catch(result=None)
+    >>> @DecoratorFactory.exception_handler(default_return=None)
     >>> def risky_function():
     ...     raise ValueError("出现错误")
     ...     return "success"
     >>> 
     >>> result = risky_function()  # 返回None而不是抛出异常
     >>> 
-    >>> @Decorate.time_run
+    >>> @DecoratorFactory.timer
     >>> def slow_function():
     ...     time.sleep(1)
     ...     return "done"
@@ -34,726 +34,531 @@
 版权所有 (C) 2024-2025, 古月居.
 """
 
-from functools import wraps
 import threading
 import time
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+
 from loguru import logger
 
-def print_log(log_msg: str, level: str = None, *args, **kwargs):
+
+def log_with_level(message: str, 
+                   level: Optional[str] = None, 
+                   *args: Any, 
+                   **kwargs: Any) -> None:
     """使用loguru库输出指定级别的日志消息.
     
     此函数提供了一种便捷的方式，使用loguru日志库记录不同
     严重级别的日志消息。
     
-    参数:
-        log_msg: 要记录的日志消息.
+    Args:
+        message: 要记录的日志消息.
         level: 日志级别，如debug/info/warning/error/exception/critical/success.
             如果为None或"exception"，默认为"error".
         *args: 传递给日志函数的位置参数.
         **kwargs: 传递给日志函数的关键字参数.
     
-    注意:
+    Note:
         "exception"级别会映射到"error"级别，因为loguru
         使用"error"进行异常日志记录.
     """
-    # loguru的exception实际为error
+    # 标准化日志级别
     if not level or level.lower() == "exception":
         level = "error"
-    # 日志等级
-    level = level.upper()
-    _options = logger._options
-    if level == "ERROR":
-        _options = (True,) + _options[1:]
-    (exception, depth, record, lazy, colors, raw, capture, patcher, extra) = _options
-    options = (exception, depth + 1, record, lazy, colors, raw, capture, patcher, extra)
-    logger._log(level, False, options, log_msg, args, kwargs)
-
-
-def class_func_list(cls: object):
-    """获取类方法列表，排除私有方法和属性.
     
-    此函数返回类或对象的公共方法列表，过滤掉以下划线开头的方法
+    level = level.upper()
+    options = logger._options
+    
+    # 为ERROR级别启用异常追踪
+    if level == "ERROR":
+        options = (True,) + options[1:]
+    
+    # 解包选项并调整调用深度
+    (exception, depth, record, lazy, colors, raw, capture, patcher, extra) = options
+    new_options = (exception, depth + 1, record, lazy, colors, raw, capture, patcher, extra)
+    logger._log(level, False, new_options, message, args, kwargs)
+
+
+def get_public_methods(obj: Any) -> List[Tuple[str, Callable]]:
+    """获取对象的公共方法列表.
+    
+    此函数返回对象的公共方法列表，过滤掉以下划线开头的方法
     和属性特性。
     
-    参数:
-        cls: 要获取方法的类或对象.
+    Args:
+        obj: 要获取方法的对象或类.
         
-    返回:
-        list: 包含(方法名, 方法对象)元组的列表，
-            包含所有公共可调用方法.
+    Returns:
+        包含(方法名, 方法对象)元组的列表，
+        包含所有公共可调用方法.
     
-    示例:
+    Example:
         >>> class MyClass:
         ...     def public_method(self):
         ...         pass
         ...     def _private_method(self):
         ...         pass
-        >>> methods = class_func_list(MyClass)
+        >>> methods = get_public_methods(MyClass)
         >>> print([name for name, _ in methods])  # ['public_method']
     """
-    if callable(cls):
-        return [(name, getattr(cls, name))
-                for name in dir(cls) if not name.startswith('_')
-                and not isinstance(getattr(cls.__class__, name, None), property)
-                ]
-    else:
-        return list()
+    if not hasattr(obj, '__dict__') and not hasattr(obj, '__class__'):
+        return []
+    
+    methods = []
+    for name in dir(obj):
+        if name.startswith('_'):
+            continue
+            
+        try:
+            attr = getattr(obj, name)
+            class_attr = getattr(obj.__class__, name, None) if hasattr(obj, '__class__') else None
+            
+            if not isinstance(class_attr, property) and callable(attr):
+                methods.append((name, attr))
+        except (AttributeError, TypeError):
+            # 忽略无法访问的属性
+            continue
+    
+    return methods
 
 
-class MyThread(threading.Thread):
-    """增强的线程类，支持返回值获取和超时控制.
+class ThreadWithResult(threading.Thread):
+    """增强的线程类，支持返回值获取和异常处理.
     
     此类扩展了标准的threading.Thread，支持从线程执行中获取
-    返回值，并为函数执行提供超时控制功能。
+    返回值，并提供异常处理功能。
     
-    属性:
-        func: 在线程中执行的目标函数.
+    Attributes:
+        target_func: 在线程中执行的目标函数.
         args: 传递给目标函数的参数元组.
+        kwargs: 传递给目标函数的关键字参数.
         result: 目标函数执行的返回值.
-        err_result: 发生错误时返回的值.
+        exception: 执行过程中发生的异常.
+        default_result: 发生错误时返回的默认值.
     
-    示例:
+    Example:
         >>> def slow_function(x, y):
         ...     time.sleep(1)
         ...     return x + y
         >>> 
-        >>> thread = MyThread(target=slow_function, args=(1, 2), err_result=0)
+        >>> thread = ThreadWithResult(target=slow_function, args=(1, 2))
         >>> thread.start()
         >>> thread.join()
         >>> result = thread.get_result()  # 返回3
-    
-    注意:
-        此实现基于:
-        https://www.cnblogs.com/hujq1029/p/7219163.html
     """
 
-    def __init__(self, target, args=(), err_result=None):
+    def __init__(self, 
+                 target: Callable[..., Any], 
+                 args: Tuple[Any, ...] = (), 
+                 kwargs: Optional[Dict[str, Any]] = None,
+                 default_result: Any = None) -> None:
         """初始化增强的线程对象.
         
-        通过添加对目标函数结果的捕获和返回支持，
-        扩展了标准的threading.Thread类。
-        
-        参数:
+        Args:
             target: 在线程中执行的目标函数.
             args: 传递给目标函数的参数元组.
-                默认为空元组.
-            err_result: 执行过程中发生错误时返回的值.
-                默认为None.
+            kwargs: 传递给目标函数的关键字参数.
+            default_result: 执行过程中发生错误时返回的值.
         """
-        super(MyThread, self).__init__()
-        self.func = target
+        super().__init__()
+        self.target_func = target
         self.args = args
-        self.result = None
-        self.err_result = err_result
+        self.kwargs = kwargs or {}
+        self.result: Any = None
+        self.exception: Optional[Exception] = None
+        self.default_result = default_result
 
-    def run(self):
-        """执行目标函数并保存其返回值.
-        
-        重写Thread类的run方法，以捕获并存储
-        目标函数执行的返回值。
-        """
-        # 接收返回值
-        self.result = self.func(*self.args)
+    def run(self) -> None:
+        """执行目标函数并保存其返回值或异常."""
+        try:
+            self.result = self.target_func(*self.args, **self.kwargs)
+        except Exception as e:
+            self.exception = e
+            logger.exception(f"线程执行失败: {e}")
 
-    def get_result(self):
+    def get_result(self) -> Any:
         """获取线程执行的结果.
         
-        返回目标函数执行的结果。
-        如果线程尚未完成或发生异常，
-        返回预定义的错误结果值。
-        
-        返回:
-            Any: 线程函数的返回值或
-                预定义的错误结果值.
-        
-        注意:
-            此方法应在线程完成执行后调用
-            (在join()之后)以获得有意义的结果.
+        Returns:
+            线程函数的返回值或默认结果值.
+            
+        Raises:
+            Exception: 如果线程执行过程中发生异常且未设置默认值.
         """
-        try:
-            return self.result
-        except Exception as e:
-            logger.exception(f"线程执行失败，MyThread超时: {e}")
-        return self.err_result
+        if self.exception is not None:
+            if self.default_result is not None:
+                return self.default_result
+            raise self.exception
+        return self.result
+
+    def has_exception(self) -> bool:
+        """检查线程执行是否发生异常."""
+        return self.exception is not None
 
 
-class Decorate:
-    """装饰器工具类，提供各种实用的装饰器.
+class DecoratorFactory:
+    """装饰器工厂类，提供各种实用的装饰器.
     
     此类包含了一套全面的装饰器集合，用于异常处理、性能计时、
-    线程安全以及自动为类方法应用装饰器等功能。
+    线程安全等功能。所有装饰器都以静态方法的形式提供。
     
-    该类提供静态装饰器方法和实例方法，
-    用于自动为类的所有方法应用装饰器。
-    
-    属性:
-        LOCK (RLock): 用于线程安全操作的线程锁.
-        DEFAULT_VALUE (bool): 默认错误返回值.
-    
-    示例:
-        使用静态装饰器:
-        
-        >>> @Decorate.catch(result="error")
-        >>> def risky_function():
-        ...     raise ValueError("出现错误")
-        >>> 
-        >>> @Decorate.time_run
-        >>> def slow_function():
-        ...     time.sleep(1)
-        
-        自动装饰类:
-        
-        >>> class MyClass:
-        ...     def method1(self):
-        ...         return "result1"
-        >>> 
-        >>> Decorate(MyClass).catch_class_obj()
+    Attributes:
+        _lock: 用于线程安全操作的可重入锁.
+        _singleton_instances: 单例模式实例缓存.
     """
 
-    # 线程锁
-    LOCK = threading.RLock()
-    # 默认返回值
-    DEFAULT_VALUE = False
-
-    """ 一、常用装饰器 """
+    _lock: threading.RLock = threading.RLock()
+    _singleton_instances: Dict[Type[Any], Any] = {}
 
     @staticmethod
-    def catch(result=False, err_info: str = "",
-              err_level: str = "exception", exception: object = Exception,
-              **d_kwargs):
-        """异常捕获装饰器，在异常时返回预设值.
+    def exception_handler(default_return: Any = None, 
+                         error_message: str = "",
+                         log_level: str = "error", 
+                         exception_types: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+                         reraise: bool = False) -> Callable:
+        """异常处理装饰器.
         
         此装饰器包装函数以捕获指定的异常，并返回预定义的值
-        而不是让异常传播。它还使用指定的日志级别记录异常详情。
+        或重新抛出异常。
         
-        参数:
-            result: 发生异常时返回的值. 默认为False.
-            err_info: 日志中错误消息的前缀字符串. 默认为空字符串.
-            err_level: 异常记录的日志级别 (debug/info/warning/error/exception/critical).
-                默认为"exception".
-            exception: 要捕获的异常类型. 默认为Exception(捕获所有异常).
-            **d_kwargs: 用于未来扩展性的额外关键字参数.
+        Args:
+            default_return: 发生异常时返回的值.
+            error_message: 日志中错误消息的前缀字符串.
+            log_level: 异常记录的日志级别.
+            exception_types: 要捕获的异常类型.
+            reraise: 是否重新抛出异常.
             
-        返回:
-            callable: 包装目标函数的装饰器函数.
+        Returns:
+            装饰器函数.
         
-        示例:
-            带自定义返回值的基本用法:
-            
-            >>> @Decorate.catch(result=None, err_info="数据处理失败")
-            >>> def process_data(data):
-            ...     # 可能抛出异常的代码
-            ...     return processed_data
-            
-            捕获特定异常类型:
-            
-            >>> @Decorate.catch(result=0, exception=ValueError)
-            >>> def parse_number(text):
-            ...     return int(text)
-        
-        注意:
-            装饰器可以带参数或不带参数使用。不带参数使用时，
-            使用默认值。
+        Example:
+            >>> @DecoratorFactory.exception_handler(default_return=0, error_message="计算失败")
+            >>> def divide(a, b):
+            ...     return a / b
         """
-
-        def decorator(func):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
-            def _wrapper(*args, **kwargs):
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
                 try:
                     return func(*args, **kwargs)
-                except exception as e:
-                    log_err = ("fail, %s() %s: %s, \n\t default return: %s" %
-                               (func.__name__, err_info, e, str(result)))
-                    print_log(log_err, err_level=err_level)
-                return result
-
-            return _wrapper
-
-        # 检查decorator是否在没有参数的情况下使用, 避免传参异常
-        if callable(result) and not d_kwargs:
-            return decorator(result)
-
+                except exception_types as e:
+                    error_msg = f"函数 {func.__name__} 执行失败"
+                    if error_message:
+                        error_msg = f"{error_message}: {error_msg}"
+                    error_msg += f" - {e}"
+                    if default_return is not None:
+                        error_msg += f", 返回默认值: {default_return}"
+                    
+                    log_with_level(error_msg, level=log_level)
+                    
+                    if reraise:
+                        raise
+                    return default_return
+            return wrapper
         return decorator
 
     @staticmethod
-    def time_run(func):
-        """测量函数执行时间的装饰器.
+    def timer(func: Callable[..., Any]) -> Callable[..., Any]:
+        """性能计时装饰器.
         
-        此装饰器包装函数以测量并记录其执行时间。
-        它记录开始和结束时间，计算经过的时间，
-        并以毫秒和分钟为单位记录结果。
+        此装饰器测量并记录函数的执行时间。
         
-        参数:
+        Args:
             func: 要测量执行时间的函数.
             
-        返回:
-            callable: 调用时记录执行时间的包装函数.
+        Returns:
+            包装后的函数.
             
-        示例:
-            >>> @Decorate.time_run
+        Example:
+            >>> @DecoratorFactory.timer
             >>> def slow_operation():
             ...     time.sleep(2)
             ...     return "completed"
-            >>> 
-            >>> result = slow_operation()  # 记录执行时间
-        
-        注意:
-            时间以毫秒为单位记录，并转换为分钟以提高可读性。
-            使用time.perf_counter()获得高精度。
         """
-
         @wraps(func)
-        def _wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             start_time = time.perf_counter()
-            logger.info(
-                f"\t Begin run time func [{func.__name__}]: {start_time:.8f} ms")
+            logger.info(f"开始执行函数 [{func.__name__}]")
 
-            result = func(*args, **kwargs)
-
-            end_time = time.perf_counter()
-            elapsed = end_time - start_time
-            logger.info(f"\t End run time func [{func.__name__}]: {elapsed * 1000.0:.8f} ms, {elapsed / 60.0:.8f} 分钟")
-
-            return result
-
-        return _wrapper
-
-    @staticmethod
-    def synchronized(func):
-        """使用RLock的线程同步装饰器.
-        
-        此装饰器通过使用可重入锁(RLock)确保被装饰函数的线程安全执行。
-        它防止多个线程同时访问同一函数时出现竞态条件。
-        
-        装饰器使用'with lock'模式进行自动锁获取和释放，
-        这比手动acquire()/release()更安全。
-        
-        参数:
-            func: 要同步的函数.
-            
-        返回:
-            callable: 具有线程同步功能的包装函数.
-            
-        示例:
-            >>> @Decorate.synchronized
-            >>> def critical_section():
-            ...     # 线程安全的代码
-            ...     shared_resource += 1
-            ...     return shared_resource
-        
-        注意:
-            Python中Lock和RLock的区别:
-            - Lock: 释放前不能被其他线程再次获取
-            - RLock: 可以被同一线程多次获取
-            - Lock: 可以被任何线程释放
-            - RLock: 只能被获取它的线程释放
-            - Lock: 不能被任何线程拥有
-            - RLock: 可以被多个线程拥有
-            - Lock: 比RLock快
-            - RLock: 比Lock慢但更灵活
-        """
-
-        @wraps(func)
-        def _wrapper(*args, **kwargs):
-            with Decorate.LOCK:
-                return func(*args, **kwargs)
-
-        return _wrapper
-
-    @staticmethod
-    def singleton(cls):
-        """线程安全的单例模式类装饰器.
-        
-        此装饰器为类实现单例模式，确保被装饰类只能存在一个实例。
-        实现使用RLock保证线程安全。
-        
-        参数:
-            cls: 要转换为单例的类.
-            
-        返回:
-            callable: 返回单例实例的包装函数.
-            
-        示例:
-            >>> @Decorate.singleton
-            >>> class DatabaseConnection:
-            ...     def __init__(self):
-            ...         self.connected = True
-            >>> 
-            >>> db1 = DatabaseConnection()
-            >>> db2 = DatabaseConnection()
-            >>> assert db1 is db2  # 同一个实例
-        
-        注意:
-            此函数实现为独立函数而不是装饰器类中的方法，
-            以避免方法解析和类装饰的潜在问题。
-        """
-        instances = {}
-
-        @wraps(cls)
-        def wrapper(*args, **kw):
-            # 线程锁
-            with Decorate.LOCK:
-                if cls not in instances:
-                    instances[cls] = cls(*args, **kw)
-                return instances[cls]
-
+            try:
+                result = func(*args, **kwargs)
+                return result
+            finally:
+                end_time = time.perf_counter()
+                elapsed = end_time - start_time
+                logger.info(f"函数 [{func.__name__}] 执行完成: "
+                           f"{elapsed * 1000:.2f}ms ({elapsed:.4f}秒)")
         return wrapper
 
     @staticmethod
-    def catch_retry(err_return=False, **d_kwargs):
-        """
-        (静态)捕捉异常，可设置重试次数
+    def thread_safe(func: Callable[..., Any]) -> Callable[..., Any]:
+        """线程安全装饰器.
+        
+        此装饰器通过使用可重入锁确保被装饰函数的线程安全执行。
         
         Args:
-            err_return: 异常时的返回值
-            **d_kwargs: 其他参数
-                retry_num (int): 重试次数，小于1时为死循环
-                sleep_time (int): 重试间隔时间(秒)
+            func: 要同步的函数.
+            
+        Returns:
+            具有线程同步功能的包装函数.
+            
+        Example:
+            >>> @DecoratorFactory.thread_safe
+            >>> def critical_section():
+            ...     # 线程安全的代码
+            ...     pass
+        """
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            with DecoratorFactory._lock:
+                return func(*args, **kwargs)
+        return wrapper
+
+    @staticmethod
+    def singleton(cls: Type[Any]) -> Callable[..., Any]:
+        """线程安全的单例模式类装饰器.
+        
+        此装饰器为类实现单例模式，确保被装饰类只能存在一个实例。
+        
+        Args:
+            cls: 要转换为单例的类.
+            
+        Returns:
+            返回单例实例的包装函数.
+            
+        Example:
+            >>> @DecoratorFactory.singleton
+            >>> class DatabaseConnection:
+            ...     def __init__(self):
+            ...         self.connected = True
+        """
+        @wraps(cls)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            with DecoratorFactory._lock:
+                if cls not in DecoratorFactory._singleton_instances:
+                    DecoratorFactory._singleton_instances[cls] = cls(*args, **kwargs)
+                return DecoratorFactory._singleton_instances[cls]
+        return wrapper
+
+    @staticmethod
+    def retry(max_attempts: int = 3, 
+              delay: float = 1.0, 
+              backoff_factor: float = 1.0,
+              exception_types: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+              default_return: Any = None) -> Callable:
+        """重试装饰器.
+        
+        此装饰器为函数添加重试功能，当函数执行失败时
+        可以按照配置的次数进行重试。
+        
+        Args:
+            max_attempts: 最大重试次数.
+            delay: 重试间隔时间(秒).
+            backoff_factor: 退避因子，每次重试延迟时间的倍数.
+            exception_types: 需要重试的异常类型.
+            default_return: 所有重试失败后的默认返回值.
                 
         Returns:
-            callable: 装饰器函数
+            装饰器函数.
+            
+        Example:
+            >>> @DecoratorFactory.retry(max_attempts=3, delay=1.0)
+            >>> def unstable_function():
+            ...     # 可能失败的操作
+            ...     pass
         """
-
-        def decorator(func):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
-            def _wrapper(*args, **kwargs):
-                # err_return = d_kwargs.get("err_return", False)  # 异常返回值
-                retry_num = d_kwargs.get("retry_num", 1)  # 循环重试次数
-                sleep_time = d_kwargs.get("sleep_time", 3)  # 循环休眠时间，单位秒
-
-                flag = False  # 标志位: 是否死循环
-                if retry_num < 1:  # 死循环
-                    flag = True
-                # 循环处理异常
-                while flag or retry_num > 0:
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                last_exception = None
+                current_delay = delay
+                
+                for attempt in range(max_attempts):
                     try:
                         return func(*args, **kwargs)
-                    except Exception as e:
-                        logger.exception(
-                            "error, try_class %s, %s(): %s, \n\t default return: %s"
-                            % (retry_num, func.__name__, e, str(err_return)))
-                    if not flag:
-                        retry_num -= 1
-                        if retry_num > 0:
-                            time.sleep(sleep_time)
-                    else:
-                        time.sleep(sleep_time)
-                return err_return
-
-            return _wrapper
-
-        # 检查decorator是否在没有参数的情况下使用, 避免传参异常
-        if callable(err_return) and not d_kwargs:
-            return decorator(err_return)
-
+                    except exception_types as e:
+                        last_exception = e
+                        if attempt < max_attempts - 1:  # 不是最后一次尝试
+                            logger.warning(f"函数 {func.__name__} 第 {attempt + 1} 次尝试失败: {e}, "
+                                         f"{current_delay:.1f}秒后重试")
+                            time.sleep(current_delay)
+                            current_delay *= backoff_factor
+                        else:
+                            logger.error(f"函数 {func.__name__} 所有 {max_attempts} 次尝试均失败")
+                
+                if default_return is not None:
+                    return default_return
+                
+                # 重新抛出最后一个异常
+                if last_exception:
+                    raise last_exception
+                    
+            return wrapper
         return decorator
 
-    """ 二、自动为py类的每个方法添加装饰器 """
-
-    """
-        方式1：使用时需要new 一个Decorate对象
-        方式2：静态直接以类名调用即可
-    """
-
-    def __init__(self, obj: object, err_return: object = False,
-                 retry_num: int = 1, sleep_time: float = 3,
-                 err_level: str = "exception", **kwargs):
-        """
-        初始化装饰器
+    @staticmethod
+    def timeout(seconds: float, default_return: Any = None) -> Callable:
+        """超时控制装饰器.
+        
+        限制函数的最大执行时间，超时后返回默认值。
         
         Args:
-            obj: 被装饰的类的实例
-            err_return: 捕获异常时的返回值
-            retry_num: 异常重试次数
-            sleep_time: 异常休眠时间
-            err_level: 日志等级, 如: debug|info|warn|error|exception
-            **kwargs: 其他参数
-        """
-        # logger.info("装饰器初始化...")
-        # 被装饰的类的实例
-        self.obj = obj
-        # 异常返回值
-        self.err_return = err_return
-        # 循环重试时间
-        self.retry_num = retry_num
-        # 循环休眠时间，单位秒
-        self.sleep_time = sleep_time
-        # 日志等级
-        self.err_level = err_level
-        # print([(name, getattr(self, name)) for name in dir(self) if not name.startswith('_')])
-        # 线程锁
-        self.lock = threading.Lock()
-        # 死循环处理标志位，为True时启用
-        self.flag_retry = False
-        if self.retry_num < 1:  # 死循环
-            self.flag_retry = True
-
-    def catch_class_obj(self):
-        """为类的每个方法添加装饰器.
-        
-        自动为Python类的每个公共方法添加异常捕获装饰器，
-        实现统一的异常处理和重试机制。
-        
-        返回:
-            None: 此方法直接修改类对象，无返回值.
-        """
-        # 获取类的方法列表
-        for name, fn in self.iter_func(self.obj):
-            # 是否为可调用方法
-            if not isinstance(fn, property) and callable(fn):
-                # print("装饰的函数名：", fn.__name__)
-                self.catch_retry_obj(name, fn)
-        # 获取类的方法列表
-        for name, fn in self.iter_func(self.obj):
-            # 是否为可调用方法
-            # if callable(fn):
-            if not isinstance(fn, property) and callable(fn):
-                # print("装饰的函数名：", fn.__name__)
-                self.catch_retry_obj(name, fn)
-            # else:
-            #     logger.warning("func %s: %s, %s" % (name, fn, type(fn)))
-
-    def catch_retry_obj(self, func_name: str, func):
-        """对象方法装饰器，捕捉异常并支持重试.
-        
-        为指定的函数添加异常捕获和重试功能，当函数执行失败时
-        可以按照配置的次数进行重试，或者进行无限重试。
-        
-        参数:
-            func_name: 被装饰的函数名.
-            func: 被装饰的函数对象.
+            seconds: 最大允许执行时长(秒).
+            default_return: 超时时的默认返回值.
             
-        返回:
-            object: 返回函数执行结果或设置的异常返回值self.err_return.
+        Returns:
+            装饰器函数.
+            
+        Example:
+            >>> @DecoratorFactory.timeout(5.0, default_return="timeout")
+            >>> def slow_function():
+            ...     time.sleep(10)
+            ...     return "completed"
         """
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            @wraps(func)
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                thread = ThreadWithResult(
+                    target=func, 
+                    args=args, 
+                    kwargs=kwargs,
+                    default_result=default_return
+                )
+                thread.daemon = True
+                thread.start()
+                thread.join(timeout=seconds)
+                
+                if thread.is_alive():
+                    logger.warning(f"函数 {func.__name__} 执行超时 ({seconds}秒)")
+                    return default_return
+                
+                return thread.get_result()
+            return wrapper
+        return decorator
 
-        @wraps(func)
-        def _wrapper(*args, **kwargs):
-            # 重试次数
-            retry_num = self.retry_num
-            # 循环处理异常，死循环或重试一定次数
-            while self.flag_retry or retry_num > 0:
+
+class ClassDecorator:
+    """类装饰器，用于自动为类的方法添加装饰器.
+    
+    此类提供了为类的所有公共方法自动添加装饰器的功能。
+    
+    Attributes:
+        target_class: 被装饰的类.
+        decorator_func: 要应用的装饰器函数.
+        method_filter: 方法过滤函数.
+    """
+
+    def __init__(self, 
+                 target_class: Type[Any],
+                 decorator_func: Callable,
+                 method_filter: Optional[Callable[[str, Callable], bool]] = None) -> None:
+        """初始化类装饰器.
+        
+        Args:
+            target_class: 被装饰的类.
+            decorator_func: 要应用的装饰器函数.
+            method_filter: 方法过滤函数，用于决定哪些方法需要装饰.
+        """
+        self.target_class = target_class
+        self.decorator_func = decorator_func
+        self.method_filter = method_filter or self._default_filter
+
+    def _default_filter(self, name: str, method: Callable) -> bool:
+        """默认的方法过滤器，过滤掉私有方法和特殊方法."""
+        return not name.startswith('_') and callable(method)
+
+    def apply(self) -> Type[Any]:
+        """应用装饰器到类的所有符合条件的方法.
+        
+        Returns:
+            装饰后的类.
+        """
+        methods = get_public_methods(self.target_class)
+        
+        for name, method in methods:
+            if self.method_filter(name, method):
                 try:
-                    return func(*args, **kwargs)
+                    decorated_method = self.decorator_func(method)
+                    setattr(self.target_class, name, decorated_method)
                 except Exception as e:
-                    print_log("error, (catch retry_num %s) %s(): %s, "
-                              "\n\t default return: %s" %
-                              (retry_num, func.__name__, e,
-                               str(self.err_return)), err_level=self.err_level)
-                # 是否为死循环
-                if not self.flag_retry:
-                    # 重试次数-1
-                    retry_num -= 1
-                    if retry_num > 0:
-                        time.sleep(self.sleep_time)
-                else:
-                    # 休息等待
-                    time.sleep(self.sleep_time)
-            return self.err_return
-
-        try:
-            setattr(self.obj, func_name, _wrapper)
-        except:
-            pass
-        return _wrapper
-
-    @staticmethod
-    def iter_func(obj, flag_property: bool = False):
-        """遍历对象的方法，获取公共方法列表.
+                    logger.warning(f"无法装饰方法 {name}: {e}")
         
-        遍历对象的方法，获取非下划线开头的方法，即筛除内置方法
-        和自定义的私有、不可重写等特殊方法。
+        return self.target_class
+
+    @staticmethod
+    def exception_safe_class(exception_types: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+                           default_return: Any = None,
+                           log_level: str = "error") -> Callable:
+        """类装饰器，为类的所有公共方法添加异常处理.
         
-        参数:
-            obj: 待遍历的对象或类.
-            flag_property: 是否包含@property装饰的函数.
-                默认为False.
+        Args:
+            exception_types: 要捕获的异常类型.
+            default_return: 异常时的默认返回值.
+            log_level: 日志级别.
             
-        返回:
-            list: 包含(方法名, 方法对象)元组的列表.
+        Returns:
+            类装饰器函数.
+        """
+        def class_decorator(cls: Type[Any]) -> Type[Any]:
+            decorator_func = DecoratorFactory.exception_handler(
+                default_return=default_return,
+                exception_types=exception_types,
+                log_level=log_level
+            )
             
-        注意:
-            暂不支持已装饰了@property的函数.
-        """
-        if not flag_property:
-            # 非 _ 开头的方法列表
-            return [(name, getattr(obj, name))
-                    for name in dir(obj) if not name.startswith('_')
-                    and not isinstance(getattr(obj.__class__, name, None), property)]
-        else:
-            list_func = []
-            for name in dir(obj):
-                if not name.startswith('_'):
-                    # 获取属性方法的原始函数
-                    original_func = getattr(obj.__class__, name, None)
-                    # property装饰的函数
-                    if isinstance(original_func, property):
-                        try:
-                            pass
-                            # list_func.append((name, getattr(self.obj, "%s.fget" % name)))
-                            # list_func.append((name, original_func.fget(self.obj)))
-                            # list_func.append((name, original_func.__get__))
-                        except Exception as e:
-                            logger.exception(e)
-                    # 可调用的函数
-                    elif callable(original_func):
-                        list_func.append((name, getattr(obj, name)))
-
-            return list_func
-
-    @staticmethod
-    def catch_class(cls, **kwargs):
-        """
-         Add decorator for each method of a class.
-        (静态) 类装饰器, 自动为py类的每个方法添加装饰器
-        :param cls: 待装饰类
-        :param kwargs: 参数
-        :return:
-        """
-
-        # 获取类的方法列表
-        for name, fn in class_func_list(cls):
-            for name, fn in Decorate.iter_func(cls, **kwargs):
-                if callable(fn):  # 是否为可调用方法
-                    Decorate._catch_retry_class(cls, name, fn)
-        return cls
-
-        # class Wrapper(cls):
-        #     # def __init__(self, *args, **kwargs):
-        #     #     self.instance = cls(*args, **kwargs)
-        #     # def __init__(self, *args, **kwargs):
-        #     #     super().__init__(*args, **kwargs)  # 调用原始类的初始化方法
-        #
-        #     def __getattribute__(self, name):
-        #         if not name.startswith('_'):
-        #             # 获取属性方法的原始函数
-        #             attr = getattr(cls, name, None)
-        #             if callable(attr):
-        #                 # attr = getattr(self.instance, name)
-        #                 attr = super().__getattribute__(name)
-        #                 logger.info("添加捕捉: %s" % attr)
-        #                 # return cls.catch(Exception)(attr)
-        #                 return Decorate.catch()(attr)
-        #                 # return logger.catch()(attr)
-        #             else:
-        #                 logger.info("不捕捉: %s" % attr)
-        #         # return getattr(self.instance, name)
-        #         return super().__getattribute__(name)
-        #
-        # Wrapper.__name__ = cls.__name__
-        # # 复制原始类的文档字符串
-        # Wrapper.__doc__ = cls.__doc__
-        # return Wrapper
-
-    @staticmethod
-    def _catch_retry_class(cls: object, name: str, func, **d_kwargs):
-        """
-        捕捉异常(传入函数func)，可设置重试次数
-        """
-
-        @wraps(func)
-        def _wrapper(*args, **kwargs):
-            flag = False  # 死循环处理标志位，为True时启用
-            err_return = d_kwargs.get("err_return", False)  # 异常返回值
-            retry_num = d_kwargs.get("retry_num", 1)  # 循环重试次数
-            sleep_time = d_kwargs.get("sleep_time", 3)  # 循环休眠时间，单位秒
-
-            if retry_num < 1:  # 死循环
-                flag = True
-            # 循环处理异常
-            while flag or retry_num > 0:
-                try:
-                    result = func(*args, **kwargs)
-                    if result == err_return:
-                        print(
-                            "Warn, result is %s, default return True: %s" %
-                            (result, func.__name__))
-                        return True
-                    else:
-                        return result
-                except Exception as e:
-                    logger.exception("error, try_retry2 %s, %s : %s, \n "
-                                     "default return: %s" %
-                                     (retry_num, func.__name__, e, str(err_return)))
-                if not flag:
-                    retry_num -= 1
-                    if retry_num > 0:
-                        time.sleep(sleep_time)
-                else:
-                    time.sleep(sleep_time)
-            return err_return
-
-        setattr(cls, name, _wrapper)
-        return _wrapper
-
-    @staticmethod
-    def limit_time(limit_time: int, err_result=None):
-        """
-        限制真实请求时间或函数执行时间
-        :param limit_time: 设置最大允许执行时长, 单位:秒
-        :param err_result: 默认返回值
-        :return: 未超时返回被装饰函数返回值, 超时则返回 None
-        """
-
-        def functions(func):
-            # 执行操作
-            def run(*params):
-                thread_func = MyThread(
-                    target=func, args=params, err_result=err_result)
-                # 主线程结束(超出时长), 则线程方法结束
-                thread_func.setDaemon(True)
-                thread_func.start()
-                # 计算分段沉睡次数
-                sleep_num = int(limit_time // 1)
-                sleep_nums = round(limit_time % 1, 1)
-                # 多次短暂沉睡并尝试获取返回值
-                for i in range(sleep_num):
-                    time.sleep(0.5)
-                    info = thread_func.get_result()
-                    if info:
-                        return info
-                time.sleep(sleep_nums)
-                # 最终返回值(不论线程是否已结束)
-                if thread_func.get_result():
-                    return thread_func.get_result()
-                else:
-                    # print("请求超时: %s" % func.__name__)
-                    logger.warning("请求超时: %s" % func.__name__)
-                    return err_result  # 超时返回  可以自定义
-
-            return run
-
-        return functions
+            class_dec = ClassDecorator(cls, decorator_func)
+            return class_dec.apply()
+        
+        return class_decorator
 
 
-# 方便直接导入使用
-catch = Decorate.catch
-catch_retry = Decorate.catch_retry
-singleton = Decorate.singleton
-synchronized = Decorate.synchronized
-# __all__ = ["synchronized", "catch", "catch_retry", "singleton"]
+# 便捷的装饰器别名，保持向后兼容
+exception_handler = DecoratorFactory.exception_handler
+timer = DecoratorFactory.timer
+thread_safe = DecoratorFactory.thread_safe
+singleton = DecoratorFactory.singleton
+retry = DecoratorFactory.retry
+timeout = DecoratorFactory.timeout
+
+# 保持向后兼容的旧名称
+catch = exception_handler
+time_run = timer
+synchronized = thread_safe
+catch_retry = retry
+limit_time = timeout
+
+# 导出的公共接口
+__all__ = [
+    'DecoratorFactory',
+    'ThreadWithResult', 
+    'ClassDecorator',
+    'log_with_level',
+    'get_public_methods',
+    'exception_handler',
+    'timer',
+    'thread_safe',
+    'singleton',
+    'retry',
+    'timeout',
+    # 向后兼容的别名
+    'catch',
+    'time_run',
+    'synchronized',
+    'catch_retry',
+    'limit_time'
+]
 
 
 if __name__ == '__main__':
-    pass
-    # 工具类实例化
-    # utils = Decorate()
-
-    # obj_tmp = Foo()
-    # obj_tmp.interface1()
-    # obj_tmp.interface2()
-    # obj_tmp.interface1()
-    # obj_tmp.interface2()
-    # obj_tmp._interface3()
-    # print(obj_tmp.interface1.__name__)
-    '''
-    print(dir(obj))
-    print("---------------------")
-    for item in [(name,getattr(obj, name)) for name in dir(obj)]:
-        print(item)'''
-
-    # raise_test()
-    # print(dir(Foo()))
-    # class_func_list(Decorate)
-
-    # print(class_func_list(RedisUtils))
+    # 示例用法
+    @exception_handler(default_return="error occurred")
+    def test_function():
+        raise ValueError("测试异常")
+    
+    @timer
+    def slow_function():
+        time.sleep(0.1)
+        return "completed"
+    
+    print(test_function())  # 输出: error occurred
+    print(slow_function())  # 输出: completed (带时间日志)

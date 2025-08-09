@@ -11,7 +11,7 @@
     logger_utils: 基于loguru的增强日志工具
     tools_utils: 通用实用函数和工具
 
-示例:
+Example:
     PyMagic组件的基本用法:
     
     >>> from pymagic import Base, Tools, logger
