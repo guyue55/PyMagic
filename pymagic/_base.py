@@ -4,26 +4,9 @@
 本模块提供了一个具有内置异常处理、日志记录功能和地址解析功能的基础类。
 它作为PyMagic库中其他类的基础。
 
-类:
-    Base: 具有异常处理和地址解析功能的基础类
-    TestExceptionClass: 用于异常处理演示的测试类
-
-Example:
-    Base类的基本用法:
-    
-    >>> class MyClass(Base):
-    ...     def __init__(self, address="localhost:8080"):
-    ...         super().__init__(address=address)
-    ...     
-    ...     def my_method(self):
-    ...         return f"Connected to {self.host}:{self.port}"
-    >>> 
-    >>> obj = MyClass("192.168.1.1:3306")
-    >>> result = obj.my_method()
-
-作者: Guyue
-许可证: MIT
-版权所有 (C) 2024-2025, 古月居.
+Author: Guyue
+License: MIT
+Copyright (C) 2024-2025, Guyue.
 """
 
 from threading import RLock
@@ -31,8 +14,8 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from pymagic.decorator_utils import Decorate
-from pymagic.tools_utils import Tools
+from .decorator_utils import DecoratorFactory, ClassDecorator
+from .tools_utils import Tools
 
 class Base:
     """提供异常处理、日志记录和地址解析功能的基础类.
@@ -95,11 +78,13 @@ class Base:
             err_level: str = kwargs.get("err_level", "exception")
 
             # 注: 暂不支持已装饰了@property的函数
-            Decorate(self,
-                     err_return=err_return,
-                     retry_num=retry_num,
-                     sleep_time=sleep_time,
-                     err_level=err_level).catch_class_obj()
+            ClassDecorator.apply_to_instance(
+                self,
+                err_return=err_return,
+                retry_num=retry_num,
+                sleep_time=sleep_time,
+                err_level=err_level
+            )
 
     def __enter__(self) -> 'Base':
         """进入上下文管理器的运行时上下文.
@@ -136,13 +121,13 @@ class Base:
 
     @property
     def Decorate(self) -> type:
-        """获取Decorate装饰器工具类的访问权限.
+        """获取DecoratorFactory装饰器工具类的访问权限.
         
         Returns:
-            包含各种有用装饰器的Decorate类，
+            包含各种有用装饰器的DecoratorFactory类，
             用于异常处理、计时、线程安全等.
         """
-        return Decorate
+        return DecoratorFactory
 
     def close(self) -> None:
         """关闭资源并执行清理操作.

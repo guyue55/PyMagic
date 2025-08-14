@@ -4,34 +4,9 @@
 本模块提供了一套全面的实用装饰器集合，用于异常处理、性能计时、
 线程安全以及自动为类方法应用装饰器等功能。
 
-类:
-    ThreadWithResult: 增强的线程类，支持返回值获取和超时控制
-    DecoratorFactory: 装饰器工厂类，提供各种实用装饰器
-
-函数:
-    log_with_level: 使用loguru的增强日志记录函数
-    get_public_methods: 获取类的公共方法列表
-
-Example:
-    装饰器的基本用法:
-    
-    >>> from pymagic.decorator_utils import DecoratorFactory
-    >>> 
-    >>> @DecoratorFactory.exception_handler(default_return=None)
-    >>> def risky_function():
-    ...     raise ValueError("出现错误")
-    ...     return "success"
-    >>> 
-    >>> result = risky_function()  # 返回None而不是抛出异常
-    >>> 
-    >>> @DecoratorFactory.timer
-    >>> def slow_function():
-    ...     time.sleep(1)
-    ...     return "done"
-
-作者: Guyue
-许可证: MIT
-版权所有 (C) 2024-2025, 古月居.
+Author: Guyue
+License: MIT
+Copyright (C) 2024-2025, Guyue.
 """
 
 import threading
@@ -486,6 +461,46 @@ class ClassDecorator:
         return self.target_class
 
     @staticmethod
+    def apply_to_instance(instance: Any,
+                         err_return: Any = False,
+                         retry_num: int = 1,
+                         sleep_time: float = 1.0,
+                         err_level: str = "exception") -> None:
+        """为实例的所有公共方法添加异常处理装饰器.
+        
+        此方法为给定实例的所有公共方法添加异常处理和重试功能，
+        替代原来的 catch_class_obj 方法。
+        
+        Args:
+            instance: 要装饰的实例对象.
+            err_return: 发生异常时的返回值.
+            retry_num: 重试次数.
+            sleep_time: 重试间隔时间(秒).
+            err_level: 日志级别.
+        """
+        methods = get_public_methods(instance)
+        
+        for name, method in methods:
+            try:
+                # 创建带重试和异常处理的装饰器
+                if retry_num > 1:
+                    decorated_method = DecoratorFactory.retry(
+                        max_attempts=retry_num,
+                        delay=sleep_time,
+                        default_return=err_return
+                    )(method)
+                else:
+                    decorated_method = DecoratorFactory.exception_handler(
+                        default_return=err_return,
+                        log_level=err_level
+                    )(method)
+                
+                # 将装饰后的方法绑定到实例
+                setattr(instance, name, decorated_method)
+            except Exception as e:
+                logger.warning(f"无法为实例方法 {name} 添加装饰器: {e}")
+
+    @staticmethod
     def exception_safe_class(exception_types: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
                            default_return: Any = None,
                            log_level: str = "error") -> Callable:
@@ -513,6 +528,7 @@ class ClassDecorator:
 
 
 # 便捷的装饰器别名，保持向后兼容
+DecoratorFactory.catch = DecoratorFactory.exception_handler
 exception_handler = DecoratorFactory.exception_handler
 timer = DecoratorFactory.timer
 thread_safe = DecoratorFactory.thread_safe
@@ -521,6 +537,8 @@ retry = DecoratorFactory.retry
 timeout = DecoratorFactory.timeout
 
 # 保持向后兼容的旧名称
+Decorate = DecoratorFactory
+Decorator = DecoratorFactory
 catch = exception_handler
 time_run = timer
 synchronized = thread_safe
@@ -530,6 +548,8 @@ limit_time = timeout
 # 导出的公共接口
 __all__ = [
     'DecoratorFactory',
+    'Decorate',
+    'Decorator',
     'ThreadWithResult', 
     'ClassDecorator',
     'log_with_level',

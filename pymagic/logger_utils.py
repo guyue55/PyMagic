@@ -4,9 +4,9 @@
 封装loguru库，支持生成不同的日志操作实例。
 提供便捷的日志配置和管理功能，支持多种输出格式和目标。
 
-作者: Guyue
-许可证: MIT
-版权所有 (C) 2024-2025, 古月居.
+Author: Guyue
+License: MIT
+Copyright (C) 2024-2025, Guyue.
 """
 
 from copy import deepcopy
@@ -14,7 +14,7 @@ from sys import stderr
 from typing import Union
 
 from loguru import logger
-from loguru._logger import Core, Logger
+from loguru._logger import Logger
 
 class LoggerUtils(Logger):
     """封装loguru库，支持生成不同日志操作实例.
@@ -46,7 +46,7 @@ class LoggerUtils(Logger):
     """
 
     logger: Logger = logger
-    DEFAULT_SINK: str = "log/logger.log"
+    DEFAULT_SINK: str = "logs/logger.log"
 
     # 日志格式定义
     # 可用变量: {process} {thread} {process.name} {thread.name} {time} {level} 
@@ -111,7 +111,7 @@ class LoggerUtils(Logger):
         return logger
 
     @classmethod
-    @logger.catch()
+    @logger.catch(reraise=True)
     def set_log(cls, log_obj: Union[Logger, str] = None, sink=None, level="INFO",
                 rotation="50 MB", retention="7 days", filter_level: str = None,
                 output_stderr: bool = True,
@@ -146,6 +146,17 @@ class LoggerUtils(Logger):
 
         if not sink:
             sink = LoggerUtils.DEFAULT_SINK
+
+        # 确保日志文件目录存在
+        if sink and isinstance(sink, str) and output_file:
+            import os
+            log_dir = os.path.dirname(sink)
+            if log_dir:
+                try:
+                    os.makedirs(log_dir, exist_ok=True)
+                except (OSError, FileExistsError):
+                    # 目录已存在或其他OS错误，忽略
+                    pass
 
         if not log_obj:
             log_obj = LoggerUtils.get_log()
@@ -207,7 +218,11 @@ class LoggerUtils(Logger):
             if flag_key and record_handlers.get(flag_key):
                 print("[Log Set] 清除旧的(日志文件)的处理器配置: %s" % flag_key)
                 for handler_id in record_handlers.pop(flag_key):
-                    log_obj.remove(handler_id)
+                    try:
+                        log_obj.remove(handler_id)
+                    except ValueError:
+                        # 处理器已经不存在，忽略错误
+                        pass
 
         # 记录处理器id
         record_sink = list()
@@ -259,22 +274,27 @@ class LoggerUtils(Logger):
         Returns:
             Logger: 新的日志实例
         """
+        import os
+        from loguru import logger as loguru_logger
 
-        import atexit
-        import sys
+        # 确保日志文件目录存在
+        if sink and isinstance(sink, str):
+            log_dir = os.path.dirname(sink)
+            if log_dir:
+                try:
+                    os.makedirs(log_dir, exist_ok=True)
+                except (OSError, FileExistsError):
+                    # 目录已存在或其他OS错误，忽略
+                    pass
 
-        from loguru import _defaults as defaults
-
-        # logger_new = Logger(Core(), None, 0, False, False, False, False, True, None, {})
-        logger_new = LoggerUtils(Core(), None, 0, False, False, False, False, True, None, {})
-
-        if defaults.LOGURU_AUTOINIT and sys.stderr:
-            logger_new.add(sys.stderr)
-        # 注册函数, 在Python解释器退出时执行
-        atexit.register(logger_new.remove)
-
-        # 设置
-        cls.set_log(logger_new, sink=sink, level=level, **kwargs)
+        # 创建新的Logger实例
+        from loguru import logger
+        
+        # 使用loguru的opt方法创建新的logger实例
+        logger_new = logger.opt()
+        
+        # 设置新的处理器
+        cls.set_log(logger_new, sink, level=level, **kwargs)
         return logger_new
 
 

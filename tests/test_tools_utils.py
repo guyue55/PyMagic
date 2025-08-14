@@ -48,14 +48,24 @@ class TestTools(unittest.TestCase):
 
     def test_check_system_win(self):
         """测试Windows系统检测功能"""
+        # 导入全局变量以便重置
+        import pymagic.tools_utils as tools_module
+        
+        # 测试Windows系统检测
         with mock.patch('pymagic.tools_utils.Tools.get_system_type', return_value="Windows"):
+            # 重置全局变量，确保重新检测
+            tools_module.g_system_type = ""
+            tools_module.g_flag_windows = False
             is_win, sys_type = Tools.check_system_win()
             self.assertTrue(is_win)
             self.assertEqual(sys_type, "Windows")
 
+        # 测试Linux系统检测
         with mock.patch('pymagic.tools_utils.Tools.get_system_type', return_value="Linux"):
+            # 重置全局变量，确保重新检测
+            tools_module.g_system_type = ""
+            tools_module.g_flag_windows = False
             is_win, sys_type = Tools.check_system_win()
-            print(Tools.get_system_type())
             self.assertFalse(is_win)
             self.assertEqual(sys_type, "Linux")
 

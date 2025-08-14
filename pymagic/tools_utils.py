@@ -3,13 +3,15 @@
 
 常用工具函数模块，提供各种实用功能，封装常用方法，尽量不涉及复杂逻辑，仅提供基础功能支持。
 
-Copyright (C) 2024-2025, 古月居。
+Author: Guyue
+License: MIT
+Copyright (C) 2024-2025, Guyue.
 """
 
 import os
 import random
 import time
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 # Third party imports
@@ -107,6 +109,9 @@ class Tools:
         """
         global g_flag_windows
         global g_system_type
+
+        if g_system_type:
+            return g_flag_windows, g_system_type
 
         # 获取系统类型
         sys_str = cls.get_system_type()
@@ -1330,7 +1335,7 @@ class Tools:
         return True
 
     @staticmethod
-    @Decorate.catch(err_level="warn")
+    @Decorate.catch(log_level="warn")
     def makedirs(path: str, flag_file: bool = False) -> bool:
         """递归创建目录，或剔除文件名创建目录。
         

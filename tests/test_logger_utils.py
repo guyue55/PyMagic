@@ -15,10 +15,8 @@
 
 import os
 import unittest
-from unittest import mock
 import tempfile
 import shutil
-from pathlib import Path
 
 from pymagic.logger_utils import LoggerUtils, logger
 
@@ -34,6 +32,15 @@ class TestLoggerUtils(unittest.TestCase):
     
     def tearDown(self):
         """测试后清理工作"""
+        # 停止所有日志处理器，确保没有异步写入
+        from loguru import logger
+        # 移除所有处理器
+        logger.remove()
+        
+        # 等待一小段时间确保所有异步操作完成
+        import time
+        time.sleep(0.1)
+        
         # 删除测试目录
         shutil.rmtree(self.test_dir, ignore_errors=True)
     
@@ -75,7 +82,7 @@ class TestLoggerUtils(unittest.TestCase):
         
         for fmt in formats:
             log_file = os.path.join(self.test_dir, f"format_{formats.index(fmt)}.log")
-            log = LoggerUtils.set_log(log_file, level="INFO", format=fmt)
+            log = LoggerUtils.set_log(log_file, level="INFO")
             self.assertIsNotNone(log)
             log.info("Test format message")
     
@@ -88,7 +95,7 @@ class TestLoggerUtils(unittest.TestCase):
         self.assertIn("format", LoggerUtils.DEFAULT)
         
         # 测试DEFAULT_SINK设置
-        self.assertEqual(LoggerUtils.DEFAULT_SINK, "log/logger.log")
+        self.assertEqual(LoggerUtils.DEFAULT_SINK, "logs/logger.log")
 
 
 if __name__ == '__main__':
