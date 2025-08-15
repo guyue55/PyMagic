@@ -8,16 +8,17 @@ License: MIT
 Copyright (C) 2024-2025, Guyue.
 """
 
+# 标准库导入 (Standard library imports)
 import os
 import random
 import time
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
-# Third party imports
+# 第三方库导入 (Third-party library imports)
 from loguru import logger
 
-# Local imports
+# 本地/自定义模块导入 (Local/custom module imports)
 from .decorator_utils import Decorate
 
 # 系统类型，windows or linux
@@ -2852,32 +2853,3 @@ class SSLFactory:
         context = ssl.create_default_context()
         context.set_ciphers(ciphers)
         return context
-
-
-# 查看运行所需内存
-# import psutil
-# print('内存使用：{}MB'.format(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024))
-
-def main():
-    """主函数，用于测试工具类功能。"""
-    # list
-    a = [{"a": 1}]
-    # tuple
-    # b = ({"b": 1},)
-    # print(json.dumps(a, ensure_ascii=False))
-    print(Tools.to_jsonstr(a))
-    print(isinstance(a, Iterable))
-    print('dict isinstance', isinstance(dict(), Iterable))
-    print('"" isinstance', isinstance("", Iterable))
-    print('"" is', type("") is Iterable)
-    print('2 isinstance', isinstance(2, Iterable))
-    print('2 is', type(2) is Iterable)
-
-    print(Tools.check_disk_space())
-    print(Tools.get_file_name("/home/test"))
-
-    Tools.exit()
-
-
-if __name__ == '__main__':
-    main()

@@ -13,13 +13,15 @@
 许可证: MIT
 """
 
+# 标准库导入 (Standard library imports)
 import unittest
 from unittest import mock
 
+# 本地/自定义模块导入 (Local/custom module imports)
 from pymagic._base import Base
+from pymagic.decorator_utils import Decorate
 from pymagic.logger_utils import logger
 from pymagic.tools_utils import Tools
-from pymagic.decorator_utils import Decorate
 
 
 class TestBase(unittest.TestCase):
@@ -103,20 +105,31 @@ class TestBase(unittest.TestCase):
     
     def test_exception_handling(self):
         """测试异常处理功能"""
-        # 创建一个会抛出异常的测试类
+        from pymagic._response import Response
+        
+        # 创建一个会抛出异常的测试类（使用Response包装）
         class TestExceptionClass(Base):
             def test_method(self):
                 raise ValueError("Test exception")
         
-        # 测试异常被捕获并返回默认值
+        # 测试异常被捕获并返回Response对象
         obj = TestExceptionClass()
         result = obj.test_method()
-        self.assertFalse(result)  # 默认返回False
+        self.assertIsInstance(result, Response)  # 返回Response对象
+        self.assertFalse(result.success)  # 执行失败
+        self.assertEqual(result.error_message, "Test exception")  # 异常信息正确
         
-        # 测试自定义返回值
-        obj = TestExceptionClass(err_return="Error")
-        result = obj.test_method()
-        self.assertEqual(result, "Error")
+        # 测试传统异常处理（禁用Response包装）
+        class LegacyExceptionClass(Base):
+            def __init__(self):
+                super().__init__(_response_wrap=False, _catch=True, err_return="Error")
+            
+            def test_method(self):
+                raise ValueError("Test exception")
+        
+        legacy_obj = LegacyExceptionClass()
+        legacy_result = legacy_obj.test_method()
+        self.assertEqual(legacy_result, "Error")  # 传统模式返回自定义错误值
 
 
 if __name__ == '__main__':

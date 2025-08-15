@@ -14,11 +14,11 @@
 许可证: MIT
 """
 
-import os
-import time
+# 标准库导入 (Standard library imports)
 import unittest
 from unittest import mock
 
+# 本地/自定义模块导入 (Local/custom module imports)
 from pymagic.tools_utils import Tools
 
 

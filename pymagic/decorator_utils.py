@@ -9,11 +9,13 @@ License: MIT
 Copyright (C) 2024-2025, Guyue.
 """
 
+# 标准库导入 (Standard library imports)
 import threading
 import time
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
+# 第三方库导入 (Third-party library imports)
 from loguru import logger
 
 
@@ -54,7 +56,8 @@ def log_with_level(message: str,
     logger._log(level, False, new_options, message, args, kwargs)
 
 
-def get_public_methods(obj: Any) -> List[Tuple[str, Callable]]:
+def get_public_methods(obj: Any, ignore_prefix: str = "_") -> List[Tuple[str, Callable]]:
+
     """获取对象的公共方法列表.
     
     此函数返回对象的公共方法列表，过滤掉以下划线开头的方法
@@ -81,7 +84,7 @@ def get_public_methods(obj: Any) -> List[Tuple[str, Callable]]:
     
     methods = []
     for name in dir(obj):
-        if name.startswith('_'):
+        if name.startswith(ignore_prefix):
             continue
             
         try:

@@ -9,13 +9,19 @@ License: MIT
 Copyright (C) 2024-2025, Guyue.
 """
 
+# 标准库导入 (Standard library imports)
+from functools import wraps
 from threading import RLock
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
+# 第三方库导入 (Third-party library imports)
 from loguru import logger
 
-from .decorator_utils import DecoratorFactory, ClassDecorator
+# 本地/自定义模块导入 (Local/custom module imports)
+from ._response import Response
+from .decorator_utils import DecoratorFactory, ClassDecorator, get_public_methods
 from .tools_utils import Tools
+
 
 class Base:
     """提供异常处理、日志记录和地址解析功能的基础类.
@@ -34,8 +40,10 @@ class Base:
         带地址解析的基本用法:
         
         >>> class DatabaseConnection(Base):
-        ...     def __init__(self, address="localhost:5432"):
-        ...         super().__init__(address=address)
+        ...     def __init__(self):
+        ...         super().__init__()
+        ...         self._parse_address("user:pass@192.168.1.1:5432")
+
         ...     
         ...     def connect(self):
         ...         return f"Connecting to {self.host}:{self.port}"
@@ -51,27 +59,18 @@ class Base:
     logger = logger
     LOCK: RLock = RLock()
 
-    def __init__(self, address: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """使用可选的地址解析初始化Base类.
         
         Args:
-            address: 各种格式的连接地址.
-                支持的格式包括:
-                - "host:port" (例如: "localhost:8080")
-                - "user:pass@host:port" (例如: "admin:secret@192.168.1.1:3306")
-                - "protocol://user:pass@host:port/path" (例如: "redis://user:pass@localhost:6379/0")
             **kwargs: 用于未来扩展的额外关键字参数.
-        
-        注意:
-            如果提供了address，它将被解析并设置以下属性:
-            host, port, user, password, protocol, path.
         """
-        # 自动解析连接地址，如：Redis、FTP地址等
-        if kwargs.get("_parse_addr", True):
-            self._parse_address(address)
 
-        # 自动为类的所有非下划线开头的方法添加异常捕获装饰器
-        if kwargs.get("_catch", True):
+        # 自动为类的所有非下划线开头的方法添加Response包装装饰器
+        if kwargs.get("_response_wrap", True):
+            self._apply_response_wrapper()
+        # 保持向后兼容的异常捕获装饰器（可选）
+        elif kwargs.get("_catch", False):
             err_return: Any = kwargs.get("err_return", False)
             retry_num: int = kwargs.get("retry_num", 1)
             sleep_time: float = kwargs.get("sleep_time", 1)
@@ -140,6 +139,42 @@ class Base:
             以提供实际的清理功能。
         """
         pass
+
+    def _apply_response_wrapper(self) -> None:
+        """为实例的所有公共方法添加Response包装装饰器.
+        
+        此方法为给定实例的所有公共方法（非下划线开头）添加Response包装功能，
+        使得这些方法的返回值都被包装在Response对象中。
+        """
+        methods = get_public_methods(self)
+        
+        for name, method in methods:
+            try:
+                # 创建Response包装装饰器
+                decorated_method = self._response_wrapper(method)
+                
+                # 将装饰后的方法绑定到实例
+                setattr(self, name, decorated_method)
+            except Exception as e:
+                logger.warning(f"无法为实例方法 {name} 添加Response包装器: {e}")
+
+    @staticmethod
+    def _response_wrapper(func: Callable[..., Any]) -> Callable[..., Response]:
+        """Response包装装饰器.
+        
+        此装饰器将函数的执行结果包装在Response对象中，
+        包含执行状态、结果、异常信息和执行时间等。
+        
+        Args:
+            func: 要包装的函数.
+            
+        Returns:
+            返回Response对象的包装函数.
+        """
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Response:
+            return Response.execute(func, *args, **kwargs)
+        return wrapper
 
     def _parse_address(self, address: Optional[str] = None) -> None:
         """解析支持多种格式的连接地址字符串.
@@ -251,36 +286,3 @@ class Base:
                     self.port = port_value
             except ValueError:
                 logger.warning(f"[Address parsing] Warning, invalid port number: {port}")
-
-
-class TestExceptionClass(Base):
-    """用于演示异常处理功能的测试类.
-    
-    此类继承自Base，用于测试Base类提供的
-    自动异常处理功能。
-    
-    Example:
-        >>> test_obj = TestExceptionClass()
-        >>> result = test_obj.test_method()  # 由于异常返回False
-    """
-    
-    def test_method(self) -> Any:
-        """引发异常的测试方法.
-        
-        此方法故意引发ValueError异常，以演示
-        Base类提供的自动异常处理功能。
-        
-        Returns:
-            由于异常处理装饰器应该返回False.
-            
-        抛出:
-            ValueError: 总是为测试目的抛出此异常.
-        """
-        raise ValueError("Test exception")
-
-
-if __name__ == '__main__':
-    # Demonstrate exception handling
-    test_instance = TestExceptionClass()
-    result = test_instance.test_method()
-    print(f"Test result: {result}")  # Should print: Test result: False

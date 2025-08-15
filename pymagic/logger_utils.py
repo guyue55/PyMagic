@@ -9,10 +9,12 @@ License: MIT
 Copyright (C) 2024-2025, Guyue.
 """
 
+# 标准库导入 (Standard library imports)
 from copy import deepcopy
 from sys import stderr
 from typing import Union
 
+# 第三方库导入 (Third-party library imports)
 from loguru import logger
 from loguru._logger import Logger
 
