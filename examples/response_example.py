@@ -53,7 +53,7 @@ def demo_exception_handling():
     response2 = Response.execute(divide_numbers, 10, 0)
     print(f"异常执行: {response2}")
     print(f"是否有异常: {response2.has_exception}")
-    print(f"异常类型: {response2.error_type}")
+    print(f"异常类型: {response2.error_name}")
     print(f"异常信息: {response2.error_message}")
     print()
 
@@ -72,22 +72,28 @@ def demo_json_output():
         }
     
     response = Response.execute(get_user_info, 123)
-    response.add_metadata("api_version", "v1.0")
-    response.add_metadata("request_id", "req_001")
+    response.metadata["api_version"] = "v1.0"
+    response.metadata["request_id"] = "req_001"
     
     # 紧凑JSON格式
     print("紧凑JSON格式:")
-    print(response.to_json())
+    import json
+    print(json.dumps(response.info()))
     print()
     
     # 格式化JSON
     print("格式化JSON:")
-    print(response.to_json(indent=2))
+    print(json.dumps(response.info(), indent=2, ensure_ascii=False))
     print()
     
     # 简化字典格式
     print("简化字典格式:")
-    print(response.to_simple_dict())
+    simple_dict = {
+        "success": response.success,
+        "result": response.result,
+        "execution_time": response.execution_time
+    }
+    print(simple_dict)
     print()
 
 
@@ -125,18 +131,18 @@ def demo_memory_management():
         return list(range(100000))  # 生成10万个数字的列表
     
     response = Response.execute(generate_large_data)
-    response.add_metadata("data_size", len(response.result))
+    response.metadata["data_size"] = len(response.result)
     
     print(f"生成数据成功: {response.success}")
-    print(f"数据大小: {response.get_metadata('data_size')}")
+    print(f"数据大小: {response.metadata.get('data_size', '未知')}")
     print(f"结果类型: {type(response.result)}")
     
-    # 清除结果以释放内存
+    # 清除结果数据以释放内存
     print("清除结果数据...")
-    response.clear_result()
+    response.result = None  # 手动清除结果以释放内存
     print(f"清除后结果: {response.result}")
     print(f"执行状态仍保留: {response.success}")
-    print(f"元数据仍保留: {response.get_metadata('data_size')}")
+    print(f"元数据仍保留: {response.metadata.get('data_size', '未知')}")
     print()
 
 
@@ -152,19 +158,20 @@ def demo_result_handling():
     
     # 成功的情况
     success_response = Response.execute(risky_operation, False)
-    result1 = success_response.get_result_or_default("默认值")
+    result1 = success_response.result if success_response.success else "默认值"
     print(f"成功情况下的结果: {result1}")
     
     # 失败的情况
     failed_response = Response.execute(risky_operation, True)
-    result2 = failed_response.get_result_or_default("默认值")
+    result2 = failed_response.result if failed_response.success else "默认值"
     print(f"失败情况下的结果: {result2}")
     
-    # 转换为字典（包含异常详情）
+    # 获取详细的错误信息
     print("\n失败响应的详细信息:")
-    error_dict = failed_response.to_dict(include_exception_details=True)
+    error_dict = failed_response.info()
     for key, value in error_dict.items():
-        print(f"  {key}: {value}")
+        if value is not None:
+            print(f"{key}: {value}")
     print()
 
 
@@ -178,7 +185,7 @@ def demo_manual_creation():
         result="手动创建的成功结果",
         execution_time=0.001234
     )
-    success_response.add_metadata("source", "manual")
+    success_response.metadata["source"] = "manual"
     
     print(f"手动成功响应: {success_response}")
     
@@ -188,9 +195,77 @@ def demo_manual_creation():
         exception=ValueError("手动创建的异常"),
         execution_time=0.002345
     )
-    failed_response.add_metadata("source", "manual")
+    failed_response.metadata["source"] = "manual"
     
     print(f"手动失败响应: {failed_response}")
+    print()
+
+
+def demo_comparison_operators():
+    """演示Response对象的比较操作符功能."""
+    print("=== Response比较操作符演示 ===")
+    
+    # 创建不同类型的Response对象
+    def return_string():
+        return "完成"
+    
+    def return_number():
+        return 42
+    
+    def return_zero():
+        return 0
+    
+    def return_none():
+        return None
+    
+    def return_empty():
+        return ""
+    
+    response_string = Response.execute(return_string)
+    response_number = Response.execute(return_number)
+    response_zero = Response.execute(return_zero)
+    response_none = Response.execute(return_none)
+    response_empty = Response.execute(return_empty)
+    
+    print("--- 相等性比较 (==) ---")
+    print(f"response_string == '完成': {response_string == '完成'}")
+    print(f"response_number == 42: {response_number == 42}")
+    print(f"response_zero == 0: {response_zero == 0}")
+    print(f"response_none == None: {response_none == None}")
+    print()
+    
+    print("--- 不等性比较 (!=) ---")
+    print(f"response_string != '其他': {response_string != '其他'}")
+    print(f"response_number != 0: {response_number != 0}")
+    print(f"response_zero != 1: {response_zero != 1}")
+    print()
+    
+    print("--- Response对象之间的比较 ---")
+    response_string2 = Response.execute(return_string)
+    print(f"response_string == response_string2: {response_string == response_string2}")
+    print(f"response_string != response_number: {response_string != response_number}")
+    print()
+    
+    print("--- 布尔值判断和条件语句 ---")
+    print(f"bool(response_string): {bool(response_string)}")
+    print(f"bool(response_zero): {bool(response_zero)}")
+    print(f"bool(response_none): {bool(response_none)}")
+    print(f"bool(response_empty): {bool(response_empty)}")
+    print()
+    
+    print("--- 条件语句示例 ---")
+    if response_string:
+        print("response_string 为真，可以继续处理")
+    
+    if not response_zero:
+        print("response_zero 为假，需要特殊处理")
+    
+    if response_number != 0:
+        print("response_number 不为零，可以用作除数")
+    
+    if response_none == None:
+        print("response_none 为空，需要提供默认值")
+    
     print()
 
 
@@ -205,6 +280,7 @@ def main():
     demo_memory_management()
     demo_result_handling()
     demo_manual_creation()
+    demo_comparison_operators()
     
     print("=== 演示完成 ===")
 
