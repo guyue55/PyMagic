@@ -131,8 +131,8 @@ class TestTools(unittest.TestCase):
     def test_format_time(self):
         """测试时间格式化功能"""
         # 使用固定的时间戳进行测试
-        timestamp = 1609459200  # 2021-01-01 08:00:00
-        self.assertEqual(Tools.format_time(timestamp), "2021-01-01 08:00:00")
+        timestamp = 1609459200  # 2021-01-01 00:00:00 UTC
+        self.assertEqual(Tools.format_time(timestamp), "2021-01-01 00:00:00")
         self.assertEqual(Tools.format_time(timestamp, "%Y-%m-%d"), "2021-01-01")
 
     def test_get_timestamp(self):
