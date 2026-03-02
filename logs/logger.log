@@ -1,0 +1,412 @@
+26-03-02 07:58:47 | ERROR    | [MainThread]| [_response:execute:161]: [/workspace/tests/test_base.py:113 in test_method] 函数执行异常: test_method
+Traceback (most recent call last):
+  File "/workspace/pymagic/_response.py", line 154, in execute
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tests/test_base.py", line 113, in test_method
+    raise ValueError("Test exception")
+ValueError: Test exception
+26-03-02 07:58:47 | ERROR    | [MainThread]| [test_base:test_exception_handling:131]: 函数 test_method 执行失败 - Test exception, 返回默认值: Error
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/local/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     │      └ <function console_main at 0x7fe84c7f4d60>
+                     └ <module 'pytest' from '/usr/local/lib/python3.12/site-packages/pytest/__init__.py'>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           └ <function main at 0x7fe84c7f4cc0>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 199, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+         │                │      │    │                          └ <_pytest.config.Config object at 0x7fe84cd8e630>
+         │                │      │    └ <HookCaller 'pytest_cmdline_main'>
+         │                │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7fe84ca1c680>
+         │                └ <_pytest.config.Config object at 0x7fe84cd8e630>
+         └ <enum 'ExitCode'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'config': <_pytest.config.Config object at 0x7fe84cd8e630>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_cmdline_main'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_cmdline_main'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_cmdline_main'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'config': <_pytest.config.Config object at 0x7fe84cd8e630>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>...
+           │    │               └ 'pytest_cmdline_main'
+           │    └ <function _multicall at 0x7fe84d0a6520>
+           └ <_pytest.config.PytestPluginManager object at 0x7fe84d1f89e0>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<_pytest.config.Config object at 0x7fe84cd8e630>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 365, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           │            │       └ <function _main at 0x7fe84c8b2b60>
+           │            └ <_pytest.config.Config object at 0x7fe84cd8e630>
+           └ <function wrap_session at 0x7fe84c8b2a20>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 318, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+    │       │            │    │       └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+    │       │            │    └ <_pytest.config.Config object at 0x7fe84cd8e630>
+    │       │            └ <function _main at 0x7fe84c8b2b60>
+    │       └ <ExitCode.OK: 0>
+    └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 372, in _main
+    config.hook.pytest_runtestloop(session=session)
+    │      │    │                          └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+    │      │    └ <HookCaller 'pytest_runtestloop'>
+    │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7fe84ca1c680>
+    └ <_pytest.config.Config object at 0x7fe84cd8e630>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtestloop'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtestloop'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtestloop'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>...
+           │    │               └ 'pytest_runtestloop'
+           │    └ <function _multicall at 0x7fe84d0a6520>
+           └ <_pytest.config.PytestPluginManager object at 0x7fe84d1f89e0>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 396, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+    │    │                                        │              └ <TestCaseFunction test_init_default>
+    │    │                                        └ <TestCaseFunction test_exception_handling>
+    │    └ <member 'config' of 'Node' objects>
+    └ <TestCaseFunction test_exception_handling>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'item': <TestCaseFunction test_exception_handling>, 'nextitem': <TestCaseFunction test_init_default>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_protocol'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_protocol'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_protocol'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'item': <TestCaseFunction test_exception_handling>, 'nextitem': <TestCaseFunction test_init_default>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner...
+           │    │               └ 'pytest_runtest_protocol'
+           │    └ <function _multicall at 0x7fe84d0a6520>
+           └ <_pytest.config.PytestPluginManager object at 0x7fe84d1f89e0>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<TestCaseFunction test_exception_handling>, <TestCaseFunction test_init_default>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner....
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+    │               │              └ <TestCaseFunction test_init_default>
+    │               └ <TestCaseFunction test_exception_handling>
+    └ <function runtestprotocol at 0x7fe84c8b1c60>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 137, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+    │       │      │               │             └ True
+    │       │      │               └ <TestCaseFunction test_exception_handling>
+    │       │      └ <function call_and_report at 0x7fe84c8b20c0>
+    │       └ <method 'append' of 'list' objects>
+    └ [<TestReport 'tests/test_base.py::TestBase::test_exception_handling' when='setup' outcome='passed'>]
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 244, in call_and_report
+    call = CallInfo.from_call(
+           │        └ <classmethod(<function CallInfo.from_call at 0x7fe84c8b2480>)>
+           └ <class '_pytest.runner.CallInfo'>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 353, in from_call
+    result: TResult | None = func()
+            │                └ <function call_and_report.<locals>.<lambda> at 0x7fe84b533060>
+            └ +TResult
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 245, in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            │                 │       └ {}
+            │                 └ <TestCaseFunction test_exception_handling>
+            └ <HookCaller 'pytest_runtest_call'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ False
+           │    │         │    │     │    │                  └ {'item': <TestCaseFunction test_exception_handling>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_call'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ False
+           │    │               │          │        └ {'item': <TestCaseFunction test_exception_handling>}
+           │    │               │          └ [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/usr/local/lib/python3.12/site-packa...
+           │    │               └ 'pytest_runtest_call'
+           │    └ <function _multicall at 0x7fe84d0a6520>
+           └ <_pytest.config.PytestPluginManager object at 0x7fe84d1f89e0>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<TestCaseFunction test_exception_handling>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner....
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 179, in pytest_runtest_call
+    item.runtest()
+    │    └ <function TestCaseFunction.runtest at 0x7fe84c4a91c0>
+    └ <TestCaseFunction test_exception_handling>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/unittest.py", line 389, in runtest
+    testcase(result=self)
+    │               └ <TestCaseFunction test_exception_handling>
+    └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 690, in __call__
+    return self.run(*args, **kwds)
+           │    │    │       └ {'result': <TestCaseFunction test_exception_handling>}
+           │    │    └ ()
+           │    └ <function TestCase.run at 0x7fe84c76fba0>
+           └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 634, in run
+    self._callTestMethod(testMethod)
+    │    │               └ <bound method TestBase.test_exception_handling of <tests.test_base.TestBase testMethod=test_exception_handling>>
+    │    └ <function TestCase._callTestMethod at 0x7fe84c76f9c0>
+    └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 589, in _callTestMethod
+    if method() is not None:
+       └ <bound method TestBase.test_exception_handling of <tests.test_base.TestBase testMethod=test_exception_handling>>
+
+  File "/workspace/tests/test_base.py", line 131, in test_exception_handling
+    legacy_result = legacy_obj.test_method()
+                    │          └ <function TestBase.test_exception_handling.<locals>.LegacyExceptionClass.test_method at 0x7fe84b507c40>
+                    └ <tests.test_base.TestBase.test_exception_handling.<locals>.LegacyExceptionClass object at 0x7fe84b57bda0>
+
+> File "/workspace/pymagic/decorator_utils.py", line 221, in wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestBase.test_exception_handling.<locals>.LegacyExceptionClass.test_method of <tests.test_base.TestBase.test_ex...
+
+  File "/workspace/tests/test_base.py", line 128, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
+26-03-02 07:59:46 | ERROR    | [MainThread]| [_response:execute:161]: [/workspace/tests/test_base.py:113 in test_method] 函数执行异常: test_method
+Traceback (most recent call last):
+  File "/workspace/pymagic/_response.py", line 154, in execute
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tests/test_base.py", line 113, in test_method
+    raise ValueError("Test exception")
+ValueError: Test exception
+26-03-02 07:59:46 | ERROR    | [MainThread]| [test_base:test_exception_handling:131]: 函数 test_method 执行失败 - Test exception, 返回默认值: Error
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/local/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     │      └ <function console_main at 0x7f669b1b0d60>
+                     └ <module 'pytest' from '/usr/local/lib/python3.12/site-packages/pytest/__init__.py'>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           └ <function main at 0x7f669b1b0cc0>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 199, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+         │                │      │    │                          └ <_pytest.config.Config object at 0x7f669b5ceba0>
+         │                │      │    └ <HookCaller 'pytest_cmdline_main'>
+         │                │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7f669af7cbf0>
+         │                └ <_pytest.config.Config object at 0x7f669b5ceba0>
+         └ <enum 'ExitCode'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'config': <_pytest.config.Config object at 0x7f669b5ceba0>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_cmdline_main'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_cmdline_main'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_cmdline_main'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'config': <_pytest.config.Config object at 0x7f669b5ceba0>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>...
+           │    │               └ 'pytest_cmdline_main'
+           │    └ <function _multicall at 0x7f669ba5e520>
+           └ <_pytest.config.PytestPluginManager object at 0x7f669bb71820>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<_pytest.config.Config object at 0x7f669b5ceba0>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 365, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           │            │       └ <function _main at 0x7f669b26ab60>
+           │            └ <_pytest.config.Config object at 0x7f669b5ceba0>
+           └ <function wrap_session at 0x7f669b26aa20>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 318, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+    │       │            │    │       └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+    │       │            │    └ <_pytest.config.Config object at 0x7f669b5ceba0>
+    │       │            └ <function _main at 0x7f669b26ab60>
+    │       └ <ExitCode.OK: 0>
+    └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 372, in _main
+    config.hook.pytest_runtestloop(session=session)
+    │      │    │                          └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>
+    │      │    └ <HookCaller 'pytest_runtestloop'>
+    │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7f669af7cbf0>
+    └ <_pytest.config.Config object at 0x7f669b5ceba0>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtestloop'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtestloop'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtestloop'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>...
+           │    │               └ 'pytest_runtestloop'
+           │    └ <function _multicall at 0x7f669ba5e520>
+           └ <_pytest.config.PytestPluginManager object at 0x7f669bb71820>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=55>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/usr/local/lib/python3.12/site-packages/_pytest/main.py'>>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/main.py", line 396, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+    │    │                                        │              └ <TestCaseFunction test_init_default>
+    │    │                                        └ <TestCaseFunction test_exception_handling>
+    │    └ <member 'config' of 'Node' objects>
+    └ <TestCaseFunction test_exception_handling>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'item': <TestCaseFunction test_exception_handling>, 'nextitem': <TestCaseFunction test_init_default>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_protocol'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_protocol'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_protocol'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'item': <TestCaseFunction test_exception_handling>, 'nextitem': <TestCaseFunction test_init_default>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner...
+           │    │               └ 'pytest_runtest_protocol'
+           │    └ <function _multicall at 0x7f669ba5e520>
+           └ <_pytest.config.PytestPluginManager object at 0x7f669bb71820>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<TestCaseFunction test_exception_handling>, <TestCaseFunction test_init_default>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner....
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+    │               │              └ <TestCaseFunction test_init_default>
+    │               └ <TestCaseFunction test_exception_handling>
+    └ <function runtestprotocol at 0x7f669b269c60>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 137, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+    │       │      │               │             └ True
+    │       │      │               └ <TestCaseFunction test_exception_handling>
+    │       │      └ <function call_and_report at 0x7f669b26a0c0>
+    │       └ <method 'append' of 'list' objects>
+    └ [<TestReport 'tests/test_base.py::TestBase::test_exception_handling' when='setup' outcome='passed'>]
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 244, in call_and_report
+    call = CallInfo.from_call(
+           │        └ <classmethod(<function CallInfo.from_call at 0x7f669b26a480>)>
+           └ <class '_pytest.runner.CallInfo'>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 353, in from_call
+    result: TResult | None = func()
+            │                └ <function call_and_report.<locals>.<lambda> at 0x7f6699d31ee0>
+            └ +TResult
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 245, in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            │                 │       └ {}
+            │                 └ <TestCaseFunction test_exception_handling>
+            └ <HookCaller 'pytest_runtest_call'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ False
+           │    │         │    │     │    │                  └ {'item': <TestCaseFunction test_exception_handling>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_call'>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ False
+           │    │               │          │        └ {'item': <TestCaseFunction test_exception_handling>}
+           │    │               │          └ [<HookImpl plugin_name='threadexception', plugin=<module '_pytest.threadexception' from '/usr/local/lib/python3.12/site-packa...
+           │    │               └ 'pytest_runtest_call'
+           │    └ <function _multicall at 0x7f669ba5e520>
+           └ <_pytest.config.PytestPluginManager object at 0x7f669bb71820>
+  File "/usr/local/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<TestCaseFunction test_exception_handling>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/usr/local/lib/python3.12/site-packages/_pytest/runner....
+  File "/usr/local/lib/python3.12/site-packages/_pytest/runner.py", line 179, in pytest_runtest_call
+    item.runtest()
+    │    └ <function TestCaseFunction.runtest at 0x7f669ae611c0>
+    └ <TestCaseFunction test_exception_handling>
+  File "/usr/local/lib/python3.12/site-packages/_pytest/unittest.py", line 389, in runtest
+    testcase(result=self)
+    │               └ <TestCaseFunction test_exception_handling>
+    └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 690, in __call__
+    return self.run(*args, **kwds)
+           │    │    │       └ {'result': <TestCaseFunction test_exception_handling>}
+           │    │    └ ()
+           │    └ <function TestCase.run at 0x7f669b127ba0>
+           └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 634, in run
+    self._callTestMethod(testMethod)
+    │    │               └ <bound method TestBase.test_exception_handling of <tests.test_base.TestBase testMethod=test_exception_handling>>
+    │    └ <function TestCase._callTestMethod at 0x7f669b1279c0>
+    └ <tests.test_base.TestBase testMethod=test_exception_handling>
+  File "/usr/local/lib/python3.12/unittest/case.py", line 589, in _callTestMethod
+    if method() is not None:
+       └ <bound method TestBase.test_exception_handling of <tests.test_base.TestBase testMethod=test_exception_handling>>
+
+  File "/workspace/tests/test_base.py", line 131, in test_exception_handling
+    legacy_result = legacy_obj.test_method()
+                    │          └ <function TestBase.test_exception_handling.<locals>.LegacyExceptionClass.test_method at 0x7f6699d93100>
+                    └ <tests.test_base.TestBase.test_exception_handling.<locals>.LegacyExceptionClass object at 0x7f6699d9d490>
+
+> File "/workspace/pymagic/decorator_utils.py", line 221, in wrapper
+    return func(*args, **kwargs)
+           │     │       └ {}
+           │     └ ()
+           └ <bound method TestBase.test_exception_handling.<locals>.LegacyExceptionClass.test_method of <tests.test_base.TestBase.test_ex...
+
+  File "/workspace/tests/test_base.py", line 128, in test_method
+    raise ValueError("Test exception")
+
+ValueError: Test exception
